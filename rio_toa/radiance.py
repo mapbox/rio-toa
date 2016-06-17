@@ -1,40 +1,52 @@
 import json
 import numpy as np
 import rasterio as rio
-
 import riomucho
 
 from rio_toa import toa_utils
 
+
 def radiance(img, ML, AL, src_nodata=0):
-    u'''Calculate surface radiance of LC8
+    u"""Calculate surface radiance of Landsat 8
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
-    
-    L = ML * Q + AL 
 
+    L = ML * Q + AL
     where:              
-        L         = TOA spectral radiance (Watts/( m2 * srad * mm))
-        ML        = Band-specific multiplicative rescaling factor from the metadata (RADIANCE_MULT_BAND_x, where x is the band number)
-        AL        = Band-specific additive rescaling factor from the metadata (RADIANCE_ADD_BAND_x, where x is the band number)
-        Q  {img}    = Quantized and calibrated standard product pixel values (DN)
+        L  = TOA spectral radiance (Watts/( m2 * srad * mm))
+        ML = Band-specific multiplicative rescaling factor from the metadata
+             (RADIANCE_MULT_BAND_x, where x is the band number)
+        AL = Band-specific additive rescaling factor from the metadata
+             (RADIANCE_ADD_BAND_x, where x is the band number)
+        Q  = Quantized and calibrated standard product pixel values (DN)
+             (ndarray img)
 
-    INPUTS
-    ------
+    Parameters
+    -----------
     img: ndarray
         array of input pixels
     ML: float
+        multiplicative rescaling factor from scene metadata
     AL: float
+        additive rescaling factor from scene metadata
 
-    RETURNS
-    -------
-    ndarray
-    '''
+    Returns
+    --------
+    ndarray:
+        float32 ndarray with shape == input shape
+    """
+
     rs = ML * img.astype(np.float32) + AL
     rs[img == src_nodata] = 0.0
 
     return rs
 
+
 def _radiance_worker(data, window, ij, g_args):
+    """
+    rio mucho worker for radiance
+    TODO: integrate rescaling functionality for
+    different output datatypes
+    """
     return radiance(
         data[0],
         g_args['M'],
@@ -42,7 +54,17 @@ def _radiance_worker(data, window, ij, g_args):
         g_args['src_nodata']
     ).astype(g_args['dst_dtype'])
 
+
 def calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes):
+    """
+    Parameters
+    ------------
+
+    Returns
+    ---------
+    out: None
+        Output is written to dst_path
+    """
     mtl = toa_utils._load_mtl(src_mtl)
 
     M = toa_utils._load_mtl_key(mtl,
@@ -75,5 +97,4 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, ba
         options=dst_profile,
         global_args=global_args) as rm:
 
-        rm.run(4)
-
+        rm.run(processes)

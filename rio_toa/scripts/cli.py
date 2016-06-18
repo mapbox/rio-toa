@@ -1,3 +1,4 @@
+
 import logging
 
 import click
@@ -39,5 +40,20 @@ def radiance(ctx, src_path, src_mtl, dst_path,
 
     calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers)
 
+@creation_options
+def reflectance(ctx, src_path, src_mtl, dst_path,
+         verbose, creation_options, l8_bidx, dst_dtype, workers):
+    """Calculates Landsat8 Surface Reflectance
+    """
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+
+    if l8_bidx == 0:
+        l8_bidx = _parse_band_from_filename(src_path)
+    elif not isinstance(l8_bidx, int):
+        raise ValueError("%s is not a valid integer" % l8_bidx)
+
+    calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers)
 
 toa.add_command(radiance)
+toa.add_command(reflectance)

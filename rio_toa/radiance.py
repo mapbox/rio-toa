@@ -32,10 +32,10 @@ def radiance(img, ML, AL, src_nodata=0):
     Returns
     --------
     ndarray:
-        float32 ndarray with shape == input shape
+        float64 ndarray with shape == input shape
     """
 
-    rs = ML * img.astype(np.float32) + AL
+    rs = ML * img.astype(np.float64) + AL
     rs[img == src_nodata] = 0.0
 
     return rs

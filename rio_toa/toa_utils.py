@@ -1,5 +1,6 @@
 import re, json, itertools
 
+
 def _parse_band_from_filename(filename):
     band = re.findall('.*\L\_[0-9]+.(tif|TIF)', filename)
 
@@ -36,6 +37,7 @@ def _load_mtl_key(mtl, keys, band=None):
         mtl = mtl[k]
 
     return mtl
+
 
 def _load_mtl(src_mtl):
     with open(src_mtl) as src:

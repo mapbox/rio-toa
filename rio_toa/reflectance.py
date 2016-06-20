@@ -69,7 +69,7 @@ def _reflectance_worker(data, window, ij, g_args):
     ).astype(g_args['dst_dtype'])
 
 
-def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes=1):
+def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes):
     """
     Parameters
     ------------

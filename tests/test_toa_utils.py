@@ -6,13 +6,14 @@ from rio_toa.toa_utils import (
 
 def test_parse_band_from_filename():
 	b = _parse_band_from_filename("LC80380312015230LGN00_B1.tif")
+	assert isinstance(b, int)
     with pytest.raises(AttributeError):
         date("foofoo")
 
 def test_load_mtl():
 	src_mtl = 'tests/data/LC80100202015018LGN00_MTL.json'
 	mtl = _load_mtl(src_mtl)
-	assert type(mtl) == dict
+	assert isinstance(mtl, dict)
 
 def test_load_mtl_key():
 	mtl_test = {u'L1_METADATA_FILE': {u'IMAGE_ATTRIBUTES': 

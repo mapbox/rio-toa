@@ -52,7 +52,7 @@ def reflectance(img, MP, AP, E, src_nodata=0):
     return rf
 
 
-def reflectance_worker(data, window, ij, g_args):
+def _reflectance_worker(data, window, ij, g_args):
     """rio mucho worker for reflectance
     TODO
     ----

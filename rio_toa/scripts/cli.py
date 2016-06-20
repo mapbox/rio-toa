@@ -34,7 +34,7 @@ def radiance(ctx, src_path, src_mtl, dst_path,
         logger.setLevel(logging.DEBUG)
 
     if l8_bidx == 0:
-        l8_bidx = _parse_band_from_filename(src_path)
+        l8_bidx = _parse_band_from_filename(src_path)[0]
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
@@ -49,7 +49,7 @@ def reflectance(ctx, src_path, src_mtl, dst_path,
         logger.setLevel(logging.DEBUG)
 
     if l8_bidx == 0:
-        l8_bidx = _parse_band_from_filename(src_path)
+        l8_bidx = _parse_band_from_filename(src_path)[0]
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 

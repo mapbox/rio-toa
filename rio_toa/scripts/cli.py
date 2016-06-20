@@ -16,6 +16,7 @@ def toa():
     pass
 
 @click.command('radiance')
+@click.command('reflectance')
 @click.argument('src_path', type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))

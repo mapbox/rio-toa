@@ -6,7 +6,7 @@ import riomucho
 from rio_toa import toa_utils
 
 
-def reflectance(img, MP, AP, E, src_nodata=0):
+def reflectance(img, MR, AR, E, src_nodata=0):
     """Calculate surface reflectance of Landsat 8
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
@@ -46,7 +46,7 @@ def reflectance(img, MP, AP, E, src_nodata=0):
 
     """
 
-    rf = (MR * img.astype(np.float32)) + AR) / sin(E)
+    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
     rf[img == src_nodata] = 0.0
 
     return rf
@@ -69,7 +69,7 @@ def _reflectance_worker(data, window, ij, g_args):
     ).astype(g_args['dst_dtype'])
 
 
-def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes):
+def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes=1):
     """
     Parameters
     ------------

@@ -14,7 +14,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
     R =    R_raw / cos(Z) =   R_raw / sin(E)
 
-    Z = 90 - E
+    Z = 90 - np.radians(E)
 
 
     where:              
@@ -37,7 +37,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     AR: float
         additive rescaling factor from scene metadata
     E: float
-        local sun elevation angle
+        local sun elevation angle in degrees
 
     Returns
     --------

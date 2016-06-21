@@ -84,10 +84,10 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
     mtl = toa_utils._load_mtl(src_mtl)
 
     M = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'RADIANCE_MULT_BAND_'],
+        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_MULT_BAND_'],
         band)
     A = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'RADIANCE_ADD_BAND_'],
+        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
         band)
     E = toa_utils._load_mtl_key(mtl, 
         ['L1_METADATA_FILE', 'IMAGE_ATTRIBUTES','SUN_ELEVATION'])

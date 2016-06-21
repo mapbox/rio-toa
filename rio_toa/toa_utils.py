@@ -1,13 +1,12 @@
 import json, re
 
 
-def _parse_bands_from_filename(filenames, template):
+def _parse_bands_from_filename(filename, template):
     tomatch = re.compile(template.replace('{b}', '([0-9]+?)'))
     bands = []
-    for f in filenames:
-        if not tomatch.match(f):
-            raise ValueError('%s is not a valid template for %s' % (template, ', '.join(filenames)))
-        bands.append(int(tomatch.findall(f)[0]))
+    if not tomatch.match(filename):
+        raise ValueError('%s is not a valid template for %s' % (template, filename))
+    bands.append(int(tomatch.findall(filename)[0]))
 
     return bands
 

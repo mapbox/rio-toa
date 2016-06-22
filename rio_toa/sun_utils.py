@@ -1,3 +1,4 @@
+import re
 import datetime
 import numpy as np
 
@@ -65,12 +66,11 @@ def calculate_declination(d, lat):
         the declination on day d
 
     """
-    return (np.rad2deg(
-            - np.arcsin(0.39799 * np.cos(
+    return (np.arcsin(0.39799 * np.cos(
                 np.deg2rad(0.98565) *
                 (d + 10) +
                 np.deg2rad(1.914) *
-                np.sin(np.deg2rad(0.98565) * (d - 2))))) *
+                np.sin(np.deg2rad(0.98565) * (d - 2)))) *
             (((np.mean(lat) > 0) + 1) * 2 - 3))
 
 
@@ -103,11 +103,11 @@ def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
     Parameters
     -----------
     longitude: ndarray or float
-        longitude of the point(s) to compute solar angle for
+        longitudes of the point(s) to compute solar angle for
     latitude: ndarray or float
-        latitude of the point(s) to compute solar angle for
+        latitudes of the point(s) to compute solar angle for
     declination: float
-        declination of the sun in degrees
+        declination of the sun in radians
     utc_hour: float
         decimal hour from a datetime object
 
@@ -117,12 +117,12 @@ def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
     """
     hour_angle = solar_angle(utc_hour, longitude)
 
-    return np.rad2deg(
+    return 90 - np.rad2deg(
             np.arcsin(
                 (np.sin(np.deg2rad(latitude)) *
-                np.sin(np.deg2rad(declination))) +
+                np.sin(declination)) +
                 (np.cos(np.deg2rad(latitude)) *
-                np.cos(np.deg2rad(declination)) *
+                np.cos(declination) *
                 np.cos(np.deg2rad(hour_angle)))
                 )
             )

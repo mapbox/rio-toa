@@ -44,6 +44,7 @@ def _load_mtl_key(mtl, keys, band=None):
 
     return mtl
 
+
 def _load_mtl(src_mtl):
     with open(src_mtl) as src:
         if src_mtl.split('.')[-1] == 'json':
@@ -73,14 +74,17 @@ def _parse_mtl_txt(mtltxt):
 
         elif is_end.match(g):
             endk = output.pop()
-            output[-1]['data'][unicode(endk['key'])] = endk['data']
+            k = u'{}'.format(endk['key'])
+            output[-1]['data'][k] = endk['data']
 
         else:
             k, d = _parse_data(g)
-            if k and d:
-                output[-1]['data'][unicode(k)] = d
+            if k:
+                k = u'{}'.format(k)
+                output[-1]['data'][k] = d
 
     return output[0]['data']
+
 
 def _cast_to_best_type(kd):
         key, data = kd[0]
@@ -92,8 +96,10 @@ def _cast_to_best_type(kd):
             except ValueError as err:
                 return key, u'{}'.format(data.strip('"'))
 
+
 def _parse_data(line):
     kd = re.findall(r'(.*)\s\=\s(.*)', line)
+
     if len(kd) == 0:
         return False, False
     else:

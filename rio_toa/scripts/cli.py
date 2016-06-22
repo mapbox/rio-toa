@@ -1,11 +1,11 @@
 
 import logging
 
-import click
+import click, json
 from rasterio.rio.options import creation_options
 from rio_toa.radiance import calculate_landsat_radiance
 from rio_toa.reflectance import calculate_landsat_reflectance
-from rio_toa.toa_utils import _parse_bands_from_filename
+from rio_toa.toa_utils import _parse_bands_from_filename, _parse_mtl_txt
 
 logger = logging.getLogger('rio_toa')
 
@@ -68,5 +68,20 @@ def reflectance(ctx, src_path, src_mtl, dst_path,
 
     calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers)
 
+@click.command('parsemtl')
+@click.argument('mtl', default='-', required=False)
+def parsemtl(mtl):
+    """Converts a Landsat 8 text MTL
+    to JSON
+    """
+    try:
+        mtl = str(click.open_file(mtl).read())
+    except IOError:
+        mtl = str('\n'.join([inputtiles]))
+
+    click.echo(json.dumps(_parse_mtl_txt(mtl)))
+
+
 toa.add_command(radiance)
 toa.add_command(reflectance)
+toa.add_command(parsemtl)

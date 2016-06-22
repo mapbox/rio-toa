@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 
 
-def parse_utc_string(utcstr):
+def parse_utc_string(collected_date, collected_time_utc):
     """
     Given a string in the format:
         YYYY-MM-DD HH:MM:SS.SSSSSSSSZ
@@ -10,14 +10,18 @@ def parse_utc_string(utcstr):
 
     Parameters
     -----------
-    utcstr: str
-        Format: YYYY-MM-DD HH:MM:SS.SSSSSSSSZ
+    collected_date_utc: str
+        Format: YYYY-MM-DD 
+    collected_time: str
+        Format: HH:MM:SS.SSSSSSSSZ
 
     Returns
     --------
     datetime object
         parsed scene center time
     """
+    utcstr = collected_date + ' ' + collected_time_utc
+
     if not re.match(r'[0-9]{4}\-[0-9]{2}\-[0-9]{2}\ [0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]+Z', utcstr):
         raise ValueError("%s is an invalid utc time" % utcstr)
 
@@ -61,27 +65,13 @@ def calculate_declination(d, lat):
         the declination on day d
 
     """
-    return (_to_deg(
+    return (np.rad2deg(
             - np.arcsin(0.39799 * np.cos(
-                _to_rad(0.98565) *
+                np.deg2rad(0.98565) *
                 (d + 10) +
-                _to_rad(1.914) *
-                np.sin(_to_rad(0.98565) * (d - 2))))) *
+                np.deg2rad(1.914) *
+                np.sin(np.deg2rad(0.98565) * (d - 2))))) *
             (((np.mean(lat) > 0) + 1) * 2 - 3))
-
-
-def _to_rad(d):
-    """
-    Converts degrees to radians
-    """
-    return d * (np.pi / 180.0)
-
-
-def _to_deg(r):
-    """
-    Converts radians to degrees
-    """
-    return r * (180.0 / np.pi)
 
 
 def solar_angle(utc_hour, longitude):
@@ -127,21 +117,22 @@ def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
     """
     hour_angle = solar_angle(utc_hour, longitude)
 
-    return _to_deg(
+    return np.rad2deg(
             np.arcsin(
-                (np.sin(_to_rad(latitude)) *
-                np.sin(_to_rad(declination))) +
-                (np.cos(_to_rad(latitude)) *
-                np.cos(_to_rad(declination)) *
-                np.cos(_to_rad(hour_angle)))
+                (np.sin(np.deg2rad(latitude)) *
+                np.sin(np.deg2rad(declination))) +
+                (np.cos(np.deg2rad(latitude)) *
+                np.cos(np.deg2rad(declination)) *
+                np.cos(np.deg2rad(hour_angle)))
                 )
             )
 
 
-def sun_elevation(bounds, shape, utc_time):
+def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     """
     Given a raster's bounds + dimensions, calculate the
     sun elevation angle in degrees for each input pixel
+    based on metadata from a Landsat MTL file
 
     Parameters
     -----------
@@ -149,8 +140,10 @@ def sun_elevation(bounds, shape, utc_time):
         bounding box of the input raster
     shape: tuple
         tuple of (rows, cols) or (depth, rows, cols) for input raster
-    utc_time: datetime object
-        the time to compute sun elevation for
+    collected_date_utc: str
+        Format: YYYY-MM-DD 
+    collected_time: str
+        Format: HH:MM:SS.SSSSSSSSZ
 
     Returns
     --------
@@ -158,6 +151,8 @@ def sun_elevation(bounds, shape, utc_time):
         ndarray with shape = (rows, cols) with sun elevation
         in degrees calculated for each pixel
     """
+    utc_time = parse_utc_string(date_collected, time_collected_utc)
+
     if len(shape) == 3:
         _, rows, cols = shape
     else:

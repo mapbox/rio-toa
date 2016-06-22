@@ -6,7 +6,7 @@ import riomucho
 from rio_toa import toa_utils
 
 
-def reflectance(img, MP, AP, E, src_nodata=0):
+def reflectance(img, MR, AR, E, src_nodata=0):
     """Calculate surface reflectance of Landsat 8
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
@@ -14,7 +14,7 @@ def reflectance(img, MP, AP, E, src_nodata=0):
 
     R =    R_raw / cos(Z) =   R_raw / sin(E)
 
-    Z = 90 - E
+    Z = 90 - np.radians(E)
 
 
     where:              
@@ -37,7 +37,7 @@ def reflectance(img, MP, AP, E, src_nodata=0):
     AR: float
         additive rescaling factor from scene metadata
     E: float
-        local sun elevation angle
+        local sun elevation angle in degrees
 
     Returns
     --------
@@ -46,13 +46,13 @@ def reflectance(img, MP, AP, E, src_nodata=0):
 
     """
 
-    rf = (MR * img.astype(np.float32)) + AR) / sin(E)
+    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
     rf[img == src_nodata] = 0.0
 
     return rf
 
 
-def reflectance_worker(data, window, ij, g_args):
+def _reflectance_worker(data, window, ij, g_args):
     """rio mucho worker for reflectance
     TODO
     ----
@@ -84,10 +84,10 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
     mtl = toa_utils._load_mtl(src_mtl)
 
     M = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'RADIANCE_MULT_BAND_'],
+        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_MULT_BAND_'],
         band)
     A = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'RADIANCE_ADD_BAND_'],
+        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
         band)
     E = toa_utils._load_mtl_key(mtl, 
         ['L1_METADATA_FILE', 'IMAGE_ATTRIBUTES','SUN_ELEVATION'])

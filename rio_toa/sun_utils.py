@@ -174,6 +174,5 @@ def sun_elevation(bounds, shape, utc_time):
     decimal_hour = time_to_dec_hour(utc_time)
     solar_hour_angle = solar_angle(decimal_hour, lng)
     declination = calculate_declination(utc_time.timetuple().tm_yday, lat)
-    lng, lat =  [-61.59413752740365, 57.30488777896068]
 
     return _calculate_sun_elevation(lng, lat, declination, decimal_hour)

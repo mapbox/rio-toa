@@ -19,6 +19,23 @@ def test_load_mtl():
 	mtl = _load_mtl(src_mtl)
 	assert isinstance(mtl, dict)
 
+def test_load_txt_mtl_1():
+	txtmtl = _load_mtl('tests/data/LC81060712016134LGN00_MTL.txt')
+	jsonmtl = _load_mtl('tests/data/LC81060712016134LGN00_MTL.json')
+
+	for k in jsonmtl['L1_METADATA_FILE'].keys():
+		assert k in txtmtl['L1_METADATA_FILE']
+		assert jsonmtl['L1_METADATA_FILE'][k] == txtmtl['L1_METADATA_FILE'][k]
+
+
+def test_load_txt_mtl_2():
+	txtmtl = _load_mtl('tests/data/LC80100202015018LGN00_MTL.txt')
+	jsonmtl = _load_mtl('tests/data/LC80100202015018LGN00_MTL.json')
+
+	for k in jsonmtl['L1_METADATA_FILE'].keys():
+		assert k in txtmtl['L1_METADATA_FILE']
+		assert jsonmtl['L1_METADATA_FILE'][k] == txtmtl['L1_METADATA_FILE'][k]
+
 
 def test_load_mtl_key():
 	mtl_test = {u'L1_METADATA_FILE': {u'IMAGE_ATTRIBUTES': 

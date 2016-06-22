@@ -10,7 +10,11 @@ def parse_utc_string(utcstr):
     Parameters
     -----------
     utcstr: str
+        date = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED']
         utc string from Landsat MTL 'SCENE_CENTER_TIME'
+        str = ds = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED'] 
+        + ' ' + mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME'].split('.')[0]
+
     Returns
     --------
     datetime object
@@ -57,18 +61,23 @@ def calculate_declination(d, lat):
         the declination on day d
     
     """
-    return np.arcsin(
+    return _to_deg(- np.arcsin(
         0.39799 * np.cos(
             _to_rad(0.98565) * (d + 10) +
-            _to_rad(1.914) * np.sin(_to_rad(0.98565) * (d - 2))
-            )
-        ) * (((np.mean(lat) > 0) + 1) * 2 - 3)
+            _to_rad(1.914) * np.sin(_to_rad(0.98565) * (d - 2))))
+    )* (((np.mean(lat) > 0) + 1) * 2 - 3)
 
 def _to_rad(d):
     """
-    Converts radians to degrees
+    Converts degrees to radians
     """
     return d / (180.0 / np.pi)
+
+def _to_deg(r):
+    """
+    Converts radians to degrees
+    """
+    return r / (np.pi / 180.0)
 
 def solar_angle(utc_hour, longitude):
     """
@@ -82,6 +91,7 @@ def solar_angle(utc_hour, longitude):
         longitude of the point(s) to compute solar angle for
     """
     localtime = (longitude / 180.0) * 12 + utc_hour
+    
     return _to_rad((localtime - 12.0) * (360.0 / 24.0))
 
 def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):

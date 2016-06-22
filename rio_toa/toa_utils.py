@@ -1,12 +1,5 @@
 import json, re
 
-<<<<<<< HEAD
-
-def _parse_band_from_filename(filename):
-    band = re.findall('.*\L\_[0-9]+.(tif|TIF)', filename)
-=======
->>>>>>> 612aa7688bf62f9887235ffd0d760b3465b95771
-
 def _parse_bands_from_filename(filenames, template):
     tomatch = re.compile(template.replace('{b}', '([0-9]+?)'))
     bands = []

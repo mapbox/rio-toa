@@ -82,11 +82,7 @@ def _parse_mtl_txt(mtltxt):
 
     return output[0]['data']
 
-def _parse_data(line):
-    kd = re.findall(r'(.*)\s\=\s(.*)', line)
-    if len(kd) == 0:
-        return False, False
-    else:
+def _cast_to_best_type(kd):
         key, data = kd[0]
         try:
             return key, int(data)
@@ -94,4 +90,11 @@ def _parse_data(line):
             try:
                 return key, float(data)
             except ValueError as err:
-                return key, unicode(data.strip('"'))
+                return key, u'{}'.format(data.strip('"'))
+
+def _parse_data(line):
+    kd = re.findall(r'(.*)\s\=\s(.*)', line)
+    if len(kd) == 0:
+        return False, False
+    else:
+        return _cast_to_best_type(kd)

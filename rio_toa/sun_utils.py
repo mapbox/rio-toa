@@ -62,8 +62,8 @@ def calculate_declination(d, lat):
 
     Returns
     --------
-    declination in degrees: float
-        the declination on day d
+    declination in radians: float
+        the declination on day 
 
     """
     return (np.arcsin(0.39799 * np.cos(

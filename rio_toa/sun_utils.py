@@ -8,6 +8,7 @@ def parse_utc_string(collected_date, collected_time_utc):
     Given a string in the format:
         YYYY-MM-DD HH:MM:SS.SSSSSSSSZ
     Parse and convert into a datetime object
+    Fractional seconds are ignored
 
     Parameters
     -----------
@@ -63,15 +64,18 @@ def calculate_declination(d, lat):
     Returns
     --------
     declination in radians: float
-        the declination on day 
+        the declination on day d
 
     """
-    return (np.arcsin(0.39799 * np.cos(
+    # is the mean latitude positive or negative?
+    # 1 if True, -1 if False
+    is_north_multiplier = (((np.mean(lat) > 0) + 1) * 2 - 3)
+
+    return np.arcsin(0.39799 * np.cos(
                 np.deg2rad(0.98565) *
                 (d + 10) +
                 np.deg2rad(1.914) *
-                np.sin(np.deg2rad(0.98565) * (d - 2)))) *
-            (((np.mean(lat) > 0) + 1) * 2 - 3))
+                np.sin(np.deg2rad(0.98565) * (d - 2)))) * is_north_multiplier
 
 
 def solar_angle(utc_hour, longitude):

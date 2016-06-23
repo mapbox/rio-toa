@@ -18,7 +18,7 @@ def test_data():
         tif_output = src.read(1)
         tif_output_meta = src.meta
 
-    with open('tests/data/LC81390452014295LGN00_mtl.json', 'r') as src:
+    with open('tests/data/LC81390452014295LGN00_MTL.json', 'r') as src:
         mtl = json.loads(src.read())
 
     return tif, tif_meta, tif_output, tif_output_meta, mtl

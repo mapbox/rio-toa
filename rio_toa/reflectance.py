@@ -4,6 +4,7 @@ import rasterio as rio
 import riomucho
 
 from rio_toa import toa_utils
+from rio_toa import sun_utils
 
 
 def reflectance(img, MR, AR, E, src_nodata=0):
@@ -45,7 +46,6 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-
     rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
     rf[img == src_nodata] = 0.0
 
@@ -59,17 +59,28 @@ def _reflectance_worker(data, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
+    if g_args['pixel']:
+        (y0, y1), (x0, x1) = window
 
-    return reflectance(
-        data[0],
-        g_args['M'],
-        g_args['A'],
-        g_args['E'],
-        g_args['src_nodata']
-    ).astype(g_args['dst_dtype'])
+        return reflectance(
+            data[0],
+            g_args['M'],
+            g_args['A'],
+            g_args['E'][y0: y1, x0: x1],
+            g_args['src_nodata']
+        ).astype(g_args['dst_dtype'])
+    else:
+        return reflectance(
+            data[0],
+            g_args['M'],
+            g_args['A'],
+            g_args['E'],
+            g_args['src_nodata']
+        ).astype(g_args['dst_dtype'])
 
 
-def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes):
+
+def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes, pixel):
     """
     Parameters
     ------------
@@ -89,8 +100,21 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
     A = toa_utils._load_mtl_key(mtl,
         ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
         band)
-    E = toa_utils._load_mtl_key(mtl, 
-        ['L1_METADATA_FILE', 'IMAGE_ATTRIBUTES','SUN_ELEVATION'])
+
+    if pixel:
+        print 'Per pixel sun elevation'
+        with rio.open(src_path) as src:
+            bounds = src.bounds
+            shape = src.shape
+        date_collected = toa_utils._load_mtl_key(mtl,
+                        ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'DATE_ACQUIRED'])
+        time_collected_utc = toa_utils._load_mtl_key(mtl,
+                        ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'SCENE_CENTER_TIME'])
+        E = sun_utils.sun_elevation(bounds, shape, date_collected, time_collected_utc)
+
+    else:
+        E = toa_utils._load_mtl_key(mtl, 
+            ['L1_METADATA_FILE', 'IMAGE_ATTRIBUTES','SUN_ELEVATION'])
 
     dst_dtype = np.__dict__[dst_dtype]
 
@@ -109,7 +133,8 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
         'M': M,
         'E': E,
         'src_nodata': 0,
-        'dst_dtype': dst_dtype
+        'dst_dtype': dst_dtype,
+        'pixel': pixel
     }
 
     with riomucho.RioMucho([src_path], dst_path, _reflectance_worker,

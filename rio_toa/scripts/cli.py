@@ -51,10 +51,11 @@ def radiance(ctx, src_path, src_mtl, dst_path,
 @click.option('--l8-bidx', default=0,
     help="L8 Band that the src_path represents (Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
+@click.option('--pixel', '-p', is_flag=True, default=False, help="per pixel sun elevation")
 @click.pass_context
 @creation_options
 def reflectance(ctx, src_path, src_mtl, dst_path,
-         verbose, creation_options, l8_bidx, dst_dtype, workers):
+         verbose, creation_options, l8_bidx, dst_dtype, workers, pixel):
     """Calculates Landsat8 Surface Reflectance
     """
     if verbose:
@@ -66,7 +67,7 @@ def reflectance(ctx, src_path, src_mtl, dst_path,
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
-    calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers)
+    calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers, pixel)
 
 @click.command('parsemtl')
 @click.argument('mtl', default='-', required=False)

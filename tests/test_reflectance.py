@@ -38,8 +38,18 @@ def test_reflectance():
                     [ 0. , 0.1, 0.1],
                     [0.1, 0., 0.1]]).astype(np.float32))
 
+    # dividing by zero error
+    with pytest.raises(Exception):
+        reflectance.reflectance(band, MR, AR, 0.0)
+
     with pytest.raises(TypeError):
         reflectance.reflectance(band, '45sldf', AR, E)
+    # wrong sun elevation shape
+    with pytest.raises(ValueError):
+        reflectance.reflectance(band, MR, AR, np.array([[1,2,3],[4,5,6]]))
+
+    with pytest.raises(ValueError):
+        reflectance.reflectance(band, MR, np.array([1,3]), E)
 
 
 def test_calculate_reflectance(test_data):
@@ -54,8 +64,9 @@ def test_calculate_reflectance(test_data):
     E = toa_utils._load_mtl_key(mtl, 
         ['L1_METADATA_FILE', 'IMAGE_ATTRIBUTES','SUN_ELEVATION'])
 
+    assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
+    assert isinstance(M, float)
     toa = reflectance.reflectance(tif, M, A, E)
-
     assert toa.dtype == np.float32
     assert np.array_equal(toa, tif_output)
 

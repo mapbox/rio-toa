@@ -51,7 +51,7 @@ def radiance(ctx, src_path, src_mtl, dst_path,
 @click.option('--l8-bidx', default=0,
     help="L8 Band that the src_path represents (Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
-@click.option('--pixel', '-p', is_flag=True, default=False, help="per pixel sun elevation")
+@click.option('--pixel-sun-elevation', '-p', is_flag=True, default=False, help="per pixel sun elevation")
 @click.pass_context
 @creation_options
 def reflectance(ctx, src_path, src_mtl, dst_path,

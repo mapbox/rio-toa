@@ -53,7 +53,7 @@ def time_to_dec_hour(parsedtime):
 
 def calculate_declination(d, lat):
     """
-    Calculate the declination of the sun in degrees based on a given day
+    Calculate the declination of the sun in radians based on a given day
     See: https://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
 
     Parameters
@@ -121,7 +121,7 @@ def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
     """
     hour_angle = solar_angle(utc_hour, longitude)
 
-    return 90 - np.rad2deg(
+    return np.rad2deg(
             np.arcsin(
                 (np.sin(np.deg2rad(latitude)) *
                 np.sin(declination)) +

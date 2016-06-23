@@ -51,7 +51,6 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         return rf
 
     else:
-        print "Smart people do not divide by 0, Sun Elevation = ", E
         raise Exception(E, img.astype(np.float))
 
 def _reflectance_worker(data, window, ij, g_args):

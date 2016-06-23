@@ -103,3 +103,10 @@ def _parse_data(line):
         return False, False
     else:
         return _cast_to_best_type(kd)
+
+def _get_bounds_from_metadata(product_metadata):
+    corners = ['LL', 'LR', 'UR', 'UL']
+    lats = [product_metadata["CORNER_{}_LAT_PRODUCT".format(i)] for i in corners]
+    lngs = [product_metadata["CORNER_{}_LON_PRODUCT".format(i)] for i in corners]
+
+    return [min(lngs), min(lats), max(lngs), max(lats)]

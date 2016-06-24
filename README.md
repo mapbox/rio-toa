@@ -39,4 +39,29 @@ Options:
                          documentation for the selected output driver for more
                          information.
   --help                 Show this message and exit.
-  ```
+```
+
+### `parsemtl`
+
+Takes a file or stdin MTL in txt format, and outputs a json-formatted MTL to stdout
+
+```
+Usage: rio toa parsemtl [OPTIONS] [MTL]
+
+  Converts a Landsat 8 text MTL to JSON
+
+Options:
+  --help  Show this message and exit.
+```
+From a local `*_MTL.txt`:
+```
+rio toa parsemtl tests/data/LC81060712016134LGN00_MTL.txt
+```
+From stdin:
+```
+cat tests/data/LC81060712016134LGN00_MTL.txt | rio toa parsemtl
+```
+From stdin on `s3`:
+```
+aws s3 cp s3://landsat-pds/L8/106/071/LC81060712016134LGN00/LC81060712016134LGN00_MTL.txt - | rio toa parsemtl
+```

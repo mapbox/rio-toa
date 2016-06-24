@@ -4,6 +4,7 @@ from click.testing import CliRunner
 import logging
 import pytest
 import rasterio
+import json
 
 from rasterio.rio.options import creation_options
 from rio_toa.scripts.cli import radiance, reflectance, parsemtl
@@ -38,11 +39,11 @@ def test_cli_parsemtl(tmpdir):
     result = runner.invoke(parsemtl,
         ['tests/data/testmtl_LC80100202015018LGN00_MTL.txt'])
     assert result.exit_code == 0
-    assert result.output == '{"L1_METADATA_FILE": {"METADATA_FILE_INFO": '\
-                    '{"ORIGIN": "Image courtesy of the U.S. Geological Survey", '\
-                    '"LANDSAT_SCENE_ID": "LC80100202015018LGN00", '\
-                    '"PROCESSING_SOFTWARE_VERSION": "LPGS_2.4.0", '\
-                    '"REQUEST_ID": "0501501184561_00001"}, '\
-                    '"PRODUCT_METADATA": {"SCENE_CENTER_TIME": '\
-                    '"15:10:22.4142571Z", "DATE_ACQUIRED": "2015-01-18", '\
-                    '"DATA_TYPE": "L1T"}}}\n'
+    assert json.loads(result.output) == dict({"L1_METADATA_FILE": {"METADATA_FILE_INFO":
+                    {"ORIGIN": "Image courtesy of the U.S. Geological Survey",
+                    "LANDSAT_SCENE_ID": "LC80100202015018LGN00",
+                    "PROCESSING_SOFTWARE_VERSION": "LPGS_2.4.0",
+                    "REQUEST_ID": "0501501184561_00001"},
+                    "PRODUCT_METADATA": {"SCENE_CENTER_TIME":
+                    "15:10:22.4142571Z", "DATE_ACQUIRED": "2015-01-18",
+                    "DATA_TYPE": "L1T"}}})

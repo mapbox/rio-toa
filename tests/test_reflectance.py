@@ -39,7 +39,7 @@ def test_reflectance():
                     [0.1, 0., 0.1]]).astype(np.float32))
 
     # dividing by zero error
-    with pytest.raises(Exception):
+    with pytest.raises(ValueErros):
         reflectance.reflectance(band, MR, AR, 0.0)
 
     with pytest.raises(TypeError):
@@ -69,14 +69,3 @@ def test_calculate_reflectance(test_data):
     toa = reflectance.reflectance(tif, M, A, E)
     assert toa.dtype == np.float32
     assert np.array_equal(toa, tif_output)
-
-
-
-
-
-
-
-
-
-
-

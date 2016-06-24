@@ -51,7 +51,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         return rf
 
     else:
-        raise Exception(E, img.astype(np.float))
+        raise ValueError(E, img.astype(np.float))
 
 def _reflectance_worker(data, window, ij, g_args):
     """rio mucho worker for reflectance

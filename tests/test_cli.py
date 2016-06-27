@@ -37,7 +37,7 @@ def test_cli_reflectance(tmpdir):
 def test_cli_parsemtl(tmpdir):
     runner = CliRunner()
     result = runner.invoke(parsemtl,
-        ['tests/data/testmtl_LC80100202015018LGN00_MTL.txt'])
+        ['tests/data/mtltest_LC80100202015018LGN00_MTL.txt'])
     assert result.exit_code == 0
     assert json.loads(result.output) == dict({"L1_METADATA_FILE": {"METADATA_FILE_INFO":
                     {"ORIGIN": "Image courtesy of the U.S. Geological Survey",

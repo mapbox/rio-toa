@@ -107,7 +107,7 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
         band)
 
     if pixel_sunangle:
-        print 'Per pixel sun elevation'
+        print ('Per pixel sun elevation')
         with rio.open(src_path) as src:
             bounds = src.bounds
             shape = src.shape

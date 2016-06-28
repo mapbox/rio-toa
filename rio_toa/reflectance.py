@@ -47,6 +47,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
     """
     rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
+    rf *= 55000
     rf[img == src_nodata] = 0.0
 
     return rf
@@ -59,7 +60,7 @@ def _reflectance_worker(data, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
-    if g_args['pixel']:
+    if g_args['pixel_sunangle']:
         (y0, y1), (x0, x1) = window
 
         return reflectance(
@@ -80,7 +81,7 @@ def _reflectance_worker(data, window, ij, g_args):
 
 
 
-def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes, pixel):
+def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes, pixel_sunangle):
     """
     Parameters
     ------------
@@ -101,7 +102,7 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
         ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
         band)
 
-    if pixel:
+    if pixel_sunangle:
         print 'Per pixel sun elevation'
         with rio.open(src_path) as src:
             bounds = src.bounds
@@ -134,7 +135,7 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
         'E': E,
         'src_nodata': 0,
         'dst_dtype': dst_dtype,
-        'pixel': pixel
+        'pixel_sunangle': pixel_sunangle
     }
 
     with riomucho.RioMucho([src_path], dst_path, _reflectance_worker,

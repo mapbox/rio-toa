@@ -4,7 +4,7 @@ import datetime
 import numpy as np
 
 from rio_toa.sun_utils import (
-    parse_utc_string, time_to_dec_hour, calculate_declination
+    parse_utc_string, time_to_dec_hour, calculate_declination,
     solar_angle, sun_elevation)
 
 def test_parse_utc_string():

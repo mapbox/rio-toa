@@ -19,8 +19,8 @@ def test_reflectance():
 
     assert np.array_equal(reflectance.reflectance(band, MR, AR, E),
                           np.array([[0., 0., 0.],
-                                    [0., 0.1, 0.1],
-                                    [0.1, 0., 0.1]]).astype(np.float32))
+                                    [0., 5500., 5500.],
+                                    [5500., 0., 5500.]]).astype(np.float32))
 
 
 def test_reflectance_zero():
@@ -62,7 +62,7 @@ def test_data():
         tif = src.read(1)
         tif_meta = src.meta
 
-    with rio.open('tests/data/tiny_LC81390452014295LGN00_B5_refl.TIF',
+    with rio.open('tests/data/tiny_LC81390452014295LGN00_B5_refl2.TIF',
                   'r') as src:
         tif_output = src.read(1)
         tif_output_meta = src.meta

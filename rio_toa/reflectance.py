@@ -45,12 +45,13 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
+    if E > np.finfo(float).eps:
+        rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
+        rf[img == src_nodata] = 0.0
+        return rf
 
-    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
-    rf[img == src_nodata] = 0.0
-
-    return rf
-
+    else:
+        raise ValueError(E, img.astype(np.float))
 
 def _reflectance_worker(data, window, ij, g_args):
     """rio mucho worker for reflectance
@@ -60,6 +61,7 @@ def _reflectance_worker(data, window, ij, g_args):
     different output datatypes
     """
 
+
     return reflectance(
         data[0],
         g_args['M'],
@@ -67,7 +69,6 @@ def _reflectance_worker(data, window, ij, g_args):
         g_args['E'],
         g_args['src_nodata']
     ).astype(g_args['dst_dtype'])
-
 
 def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes):
     """

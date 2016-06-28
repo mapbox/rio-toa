@@ -46,11 +46,15 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
-    rf *= 55000
-    rf[img == src_nodata] = 0.0
 
-    return rf
+    if E > np.finfo(float).eps:
+        rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
+        rf *= 55000
+        rf[img == src_nodata] = 0.0
+        return rf
+
+    else:
+        raise ValueError(E, img.astype(np.float))
 
 
 def _reflectance_worker(data, window, ij, g_args):

@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import rasterio as rio
+from rasterio.coords import BoundingBox
 import riomucho
 
 from rio_toa import toa_utils
@@ -47,14 +48,15 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
     """
 
-    if E > np.finfo(float).eps:
-        rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
-        rf *= 55000
-        rf[img == src_nodata] = 0.0
-        return rf
+    # if E > np.finfo(float).eps:
+    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
+    rf *= 55000
+    rf[img == src_nodata] = 0.0
 
-    else:
-        raise ValueError(E, img.astype(np.float))
+    return rf
+
+    # else:
+    #     raise ValueError(E, img.astype(np.float))
 
 
 def _reflectance_worker(data, window, ij, g_args):
@@ -109,12 +111,12 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
     if pixel_sunangle:
         print ('Per pixel sun elevation')
         with rio.open(src_path) as src:
-            bounds = src.bounds
             shape = src.shape
         date_collected = toa_utils._load_mtl_key(mtl,
                         ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'DATE_ACQUIRED'])
         time_collected_utc = toa_utils._load_mtl_key(mtl,
                         ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'SCENE_CENTER_TIME'])
+        bounds = BoundingBox(*toa_utils._get_bounds_from_metadata(mtl['L1_METADATA_FILE']['PRODUCT_METADATA']))
         E = sun_utils.sun_elevation(bounds, shape, date_collected, time_collected_utc)
 
     else:

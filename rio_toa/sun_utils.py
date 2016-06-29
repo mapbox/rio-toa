@@ -53,7 +53,9 @@ def time_to_dec_hour(parsedtime):
 
 def calculate_declination(d, lat):
     """
-    Calculate the declination of the sun in radians based on a given day
+    Calculate the declination of the sun in radians based on a given day.
+    As reference +23.26 degrees at the northern summer solstice, -23.26
+    degrees at the southern summer solstice.
     See: https://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
 
     Parameters
@@ -69,13 +71,15 @@ def calculate_declination(d, lat):
     """
     # is the mean latitude positive or negative?
     # 1 if True, -1 if False
-    is_north_multiplier = (((np.mean(lat) > 0) + 1) * 2 - 3)
 
-    return np.arcsin(0.39799 * np.cos(
-                np.deg2rad(0.98565) *
-                (d + 10) +
-                np.deg2rad(1.914) *
-                np.sin(np.deg2rad(0.98565) * (d - 2)))) * is_north_multiplier
+    # is_north_multiplier = (((np.mean(lat) > 0) + 1) * 2 - 3)
+
+    # return np.arcsin(0.39799 * np.cos(
+    #             np.deg2rad(0.98565) *
+    #             (d + 10) +
+    #             np.deg2rad(1.914) *
+    #             np.sin(np.deg2rad(0.98565) * (d - 2))))
+    return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
 
 
 def solar_angle(utc_hour, longitude):
@@ -173,5 +177,5 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     decimal_hour = time_to_dec_hour(utc_time)
     solar_hour_angle = solar_angle(decimal_hour, lng)
     declination = calculate_declination(utc_time.timetuple().tm_yday, lat)
-
+    
     return _calculate_sun_elevation(lng, lat, declination, decimal_hour)

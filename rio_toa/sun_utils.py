@@ -78,7 +78,7 @@ def calculate_declination(d, lat):
     #             np.deg2rad(0.98565) *
     #             (d + 10) +
     #             np.deg2rad(1.914) *
-    #             np.sin(np.deg2rad(0.98565) * (d - 2))))
+    #             np.sin(np.deg2rad(0.98565) * (d - 2)))) * is_north_multiplier
     return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
 
 
@@ -177,5 +177,5 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     decimal_hour = time_to_dec_hour(utc_time)
     solar_hour_angle = solar_angle(decimal_hour, lng)
     declination = calculate_declination(utc_time.timetuple().tm_yday, lat)
-    
+
     return _calculate_sun_elevation(lng, lat, declination, decimal_hour)

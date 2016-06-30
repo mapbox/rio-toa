@@ -3,8 +3,9 @@ import numpy as np
 import rasterio as rio
 import riomucho
 import pytest
+from rasterio.coords import BoundingBox
 
-from rio_toa import toa_utils
+from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
 
 
@@ -61,6 +62,7 @@ def test_data():
                   'r') as src:
         tif = src.read(1)
         tif_meta = src.meta
+        tif_shape = src.shape
 
     with rio.open('tests/data/tiny_LC81390452014295LGN00_B5_refl2.TIF',
                   'r') as src:
@@ -70,11 +72,11 @@ def test_data():
     with open('tests/data/LC81390452014295LGN00_MTL.json', 'r') as src:
         mtl = json.loads(src.read())
 
-    return tif, tif_meta, tif_output, tif_output_meta, mtl
+    return tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl
 
 
 def test_calculate_reflectance(test_data):
-    tif, tif_meta, tif_output, tif_output_meta, mtl = test_data
+    tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
 
     M = toa_utils._load_mtl_key(mtl,
                                 ['L1_METADATA_FILE',
@@ -96,3 +98,28 @@ def test_calculate_reflectance(test_data):
     toa = reflectance.reflectance(tif, M, A, E)
     assert toa.dtype == np.float32
     # assert np.array_equal(toa, tif_output)
+
+def test_calculate_reflectance2(test_data):
+    tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
+
+    M = toa_utils._load_mtl_key(mtl,
+                                ['L1_METADATA_FILE',
+                                 'RADIOMETRIC_RESCALING',
+                                 'REFLECTANCE_MULT_BAND_'],
+                                5)
+    A = toa_utils._load_mtl_key(mtl,
+                                ['L1_METADATA_FILE',
+                                 'RADIOMETRIC_RESCALING',
+                                 'REFLECTANCE_ADD_BAND_'],
+                                5)
+    date_collected = toa_utils._load_mtl_key(mtl,
+                    ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'DATE_ACQUIRED'])
+    time_collected_utc = toa_utils._load_mtl_key(mtl,
+                    ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'SCENE_CENTER_TIME'])
+    bounds = BoundingBox(*toa_utils._get_bounds_from_metadata(mtl['L1_METADATA_FILE']['PRODUCT_METADATA']))
+    E = sun_utils.sun_elevation(bounds, tif_shape, date_collected, time_collected_utc)
+    toa = reflectance.reflectance(tif, M, A, E)
+    assert toa.dtype == np.float32
+
+
+

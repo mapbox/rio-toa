@@ -61,7 +61,7 @@ def test_reflectance_wrong_shape():
 def test_var():
     src_path = 'tests/data/tiny_LC81390452014295LGN00_B5.TIF'
     src_mtl = 'tests/data/LC81390452014295LGN00_MTL.json'
-    dst_path = '/tmp/reflectance.TIF'
+    dst_path = 'tests/data/tiny_LC81390452014295LGN00_B5_refl2.TIF'
 
     return src_path, src_mtl, dst_path
 

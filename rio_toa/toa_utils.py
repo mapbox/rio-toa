@@ -1,4 +1,5 @@
 import json, re
+import numpy as np
 
 def _parse_bands_from_filename(filenames, template):
     tomatch = re.compile(template.replace('{b}', '([0-9]+?)'))
@@ -110,3 +111,11 @@ def _get_bounds_from_metadata(product_metadata):
     lngs = [product_metadata["CORNER_{}_LON_PRODUCT".format(i)] for i in corners]
 
     return [min(lngs), min(lats), max(lngs), max(lats)]
+
+
+def rescale(arr, rescale_factor, dtype):
+    """Convert an array from 0..1 to dtype, scaling up linearly
+    """
+    arr *= rescale_factor * np.iinfo(np.uint16).max
+    return np.clip(arr, 1, np.iinfo(np.uint16).max).astype(dtype)
+

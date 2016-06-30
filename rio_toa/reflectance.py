@@ -48,15 +48,10 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
     """
 
-    # if E > np.finfo(float).eps:
-    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.radians(E))
-    rf *= 55000
+    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
     rf[img == src_nodata] = 0.0
 
     return rf
-
-    # else:
-    #     raise ValueError(E, img.astype(np.float))
 
 
 def _reflectance_worker(data, window, ij, g_args):
@@ -69,25 +64,24 @@ def _reflectance_worker(data, window, ij, g_args):
     if g_args['pixel_sunangle']:
         (y0, y1), (x0, x1) = window
 
-        return reflectance(
+        return toa_utils.rescale(reflectance(
             data[0],
             g_args['M'],
             g_args['A'],
             g_args['E'][y0: y1, x0: x1],
-            g_args['src_nodata']
-        ).astype(g_args['dst_dtype'])
+            g_args['src_nodata']),
+            g_args['rescale_factor'], g_args['dst_dtype'])
     else:
-        return reflectance(
+        return toa_utils.rescale(reflectance(
             data[0],
             g_args['M'],
             g_args['A'],
             g_args['E'],
-            g_args['src_nodata']
-        ).astype(g_args['dst_dtype'])
+            g_args['src_nodata']),
+            g_args['rescale_factor'], g_args['dst_dtype'])
 
 
-
-def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes, pixel_sunangle):
+def calculate_landsat_reflectance(src_path, src_mtl, dst_path, rescale_factor, creation_options, band, dst_dtype, processes, pixel_sunangle):
     """
     Parameters
     ------------
@@ -141,6 +135,7 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options,
         'E': E,
         'src_nodata': 0,
         'dst_dtype': dst_dtype,
+        'rescale_factor': rescale_factor,
         'pixel_sunangle': pixel_sunangle
     }
 

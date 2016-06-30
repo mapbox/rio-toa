@@ -74,11 +74,11 @@ def calculate_declination(d, lat):
 
     # is_north_multiplier = (((np.mean(lat) > 0) + 1) * 2 - 3)
 
-    # return np.arcsin(0.39799 * np.cos(
+    # return - np.arcsin(0.39799 * np.cos(
     #             np.deg2rad(0.98565) *
     #             (d + 10) +
     #             np.deg2rad(1.914) *
-    #             np.sin(np.deg2rad(0.98565) * (d - 2)))) * is_north_multiplier
+    #             np.sin(np.deg2rad(0.98565) * (d - 2))))
     return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
 
 

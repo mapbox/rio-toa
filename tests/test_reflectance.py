@@ -21,8 +21,8 @@ def test_reflectance():
 
     assert np.array_equal(reflectance.reflectance(band, MR, AR, E),
                           np.array([[0., 0., 0.],
-                                    [0., 5500., 5500.],
-                                    [5500., 0., 5500.]]).astype(np.float32))
+                                    [0., 0.1, 0.1],
+                                    [0.1, 0., 0.1]]).astype(np.float32))
 
 
 def test_reflectance_zero():
@@ -58,19 +58,27 @@ def test_reflectance_wrong_shape():
 
 
 @pytest.fixture
-def test_data():
-    with rio.open('tests/data/tiny_LC81390452014295LGN00_B5.TIF',
-                  'r') as src:
+def test_var():
+    src_path = 'tests/data/tiny_LC81390452014295LGN00_B5.TIF'
+    src_mtl = 'tests/data/LC81390452014295LGN00_MTL.json'
+    dst_path = '/tmp/reflectance.TIF'
+
+    return src_path, src_mtl, dst_path
+
+@pytest.fixture
+def test_data(test_var):
+    src_path, src_mtl, dst_path = test_var
+
+    with rio.open(src_path, 'r') as src:
         tif = src.read(1)
         tif_meta = src.meta
         tif_shape = src.shape
 
-    with rio.open('tests/data/tiny_LC81390452014295LGN00_B5_refl2.TIF',
-                  'r') as src:
+    with rio.open(dst_path, 'r') as src:
         tif_output = src.read(1)
         tif_output_meta = src.meta
 
-    with open('tests/data/LC81390452014295LGN00_MTL.json', 'r') as src:
+    with open(src_mtl, 'r') as src:
         mtl = json.loads(src.read())
 
     return tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl
@@ -121,19 +129,22 @@ def test_calculate_reflectance2(test_data):
     E = sun_utils.sun_elevation(bounds, tif_shape, date_collected, time_collected_utc)
     toa = reflectance.reflectance(tif, M, A, E)
     assert toa.dtype == np.float32
+    assert np.all(toa) < 1.5
+    assert np.all(toa) >= 0.0
 
-def test_calculate_landsat_reflectance():
-    src_path = 'tests/data/tiny_LC81390452014295LGN00_B5.TIF'
-    src_mtl = 'tests/data/LC81390452014295LGN00_MTL.json'
-    dst_path = '/tmp/reflectance.TIF'
-    creation_options ={}
+def test_calculate_landsat_reflectance(test_var, capfd):
+    src_path, src_mtl, dst_path = test_var
+    rescale_factor = 1.0
+    creation_options = {}
     band = 5
     dst_dtype = 'float32'
     processes = 1
     pixel_sunangle = True
     reflectance.calculate_landsat_reflectance(src_path, src_mtl, dst_path, \
-                                creation_options, band, dst_dtype, \
-                                processes, pixel_sunangle)
+                                rescale_factor, creation_options, band, \
+                                dst_dtype, processes, pixel_sunangle)
+    out, err = capfd.readouterr()
+    assert out == 'Per pixel sun elevation\n'
     assert os.path.exists(dst_path)
 
 

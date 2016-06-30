@@ -47,6 +47,7 @@ def radiance(ctx, src_path, src_mtl, dst_path,
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype', type=click.Choice(['float32', 'uint16']), default='float32')
+@click.option('--rescale-factor', '-r', type=click.Choice([55000.0/2**16, 1.0]), default=55000.0/2**16)
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0,
     help="L8 Band that the src_path represents (Default is parsed from file name)")
@@ -54,8 +55,8 @@ def radiance(ctx, src_path, src_mtl, dst_path,
 @click.option('--pixel-sunangle', '-p', is_flag=True, default=False, help="per pixel sun elevation")
 @click.pass_context
 @creation_options
-def reflectance(ctx, src_path, src_mtl, dst_path,
-         verbose, creation_options, l8_bidx, dst_dtype, workers, pixel_sunangle):
+def reflectance(ctx, src_path, src_mtl, dst_path, dst_dtype, rescale_factor,
+         workers, l8_bidx, verbose, creation_options, pixel_sunangle):
     """Calculates Landsat8 Surface Reflectance
     """
     if verbose:
@@ -67,7 +68,9 @@ def reflectance(ctx, src_path, src_mtl, dst_path,
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
-    calculate_landsat_reflectance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers, pixel_sunangle)
+    calculate_landsat_reflectance(src_path, src_mtl, dst_path,
+                                  rescale_factor, creation_options, l8_bidx, 
+                                  dst_dtype, workers, pixel_sunangle)
 
 @click.command('parsemtl')
 @click.argument('mtl', default='-', required=False)

@@ -1,3 +1,4 @@
+import os
 import json
 import numpy as np
 import rasterio as rio
@@ -121,5 +122,18 @@ def test_calculate_reflectance2(test_data):
     toa = reflectance.reflectance(tif, M, A, E)
     assert toa.dtype == np.float32
 
+def test_calculate_landsat_reflectance():
+    src_path = 'tests/data/tiny_LC81390452014295LGN00_B5.TIF'
+    src_mtl = 'tests/data/LC81390452014295LGN00_MTL.json'
+    dst_path = '/tmp/reflectance.TIF'
+    creation_options ={}
+    band = 5
+    dst_dtype = 'float32'
+    processes = 1
+    pixel_sunangle = True
+    reflectance.calculate_landsat_reflectance(src_path, src_mtl, dst_path, \
+                                creation_options, band, dst_dtype, \
+                                processes, pixel_sunangle)
+    assert os.path.exists(dst_path)
 
 

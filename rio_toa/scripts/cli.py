@@ -46,7 +46,7 @@ def radiance(ctx, src_path, src_mtl, dst_path,
 @click.argument('src_path', type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
-@click.option('--dst-dtype', type=click.Choice(['float32', 'uint16']), default='float32')
+@click.option('--dst-dtype', type=click.Choice(['float32', 'float64', 'uint16', 'uint8']), default='float32')
 @click.option('--rescale-factor', '-r', type=click.Choice([55000.0/2**16, 1.0]), default=55000.0/2**16)
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0,

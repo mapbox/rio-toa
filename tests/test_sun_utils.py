@@ -22,7 +22,7 @@ def test_time_to_dec_hour():
 def test_declination():
     d = 173
     lat = 21.6668
-    assert np.rad2deg(calculate_declination(d, lat)) > 0.0
+    assert np.rad2deg(calculate_declination(d)) > 0.0
 
 @pytest.fixture
 def test_data():

@@ -144,7 +144,6 @@ def test_calculate_landsat_reflectance(test_var, capfd):
                                 rescale_factor, creation_options, band, \
                                 dst_dtype, processes, pixel_sunangle)
     out, err = capfd.readouterr()
-    assert out == 'Per pixel sun elevation\n'
     assert os.path.exists(dst_path)
 
 

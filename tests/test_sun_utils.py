@@ -62,7 +62,7 @@ def test_sun_angle2(test_data):
     assert sunangles.max() > mtl_sun
     assert sunangles.min() < mtl_sun
 
-<<<<<<< HEAD
+
 def test_sun_angle3(test_data):
     # South, Winter
     mtl = test_data[2]
@@ -76,6 +76,8 @@ def test_sun_angle3(test_data):
         mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME'])
 
     assert sunangles[49][49] - mtl_sun < 5
+
+
 def test_sun_angle4(test_data):
     # South, Winter
     mtl = test_data[3]

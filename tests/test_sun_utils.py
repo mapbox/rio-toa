@@ -1,3 +1,5 @@
+import pytest, json
+
 from rio_toa import sun_utils, toa_utils
 from rasterio.coords import BoundingBox
 import datetime
@@ -60,6 +62,7 @@ def test_sun_angle2(test_data):
     assert sunangles.max() > mtl_sun
     assert sunangles.min() < mtl_sun
 
+<<<<<<< HEAD
 def test_sun_angle3(test_data):
     # South, Winter
     mtl = test_data[2]
@@ -86,3 +89,20 @@ def test_sun_angle4(test_data):
         mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME'])
 
     assert sunangles[49][49] - mtl_sun < 5
+
+@pytest.fixture
+def sun_elev_test_data():
+    with open('tests/data/path164sundata.json') as dsrc:
+        return json.loads(dsrc.read())
+
+def test_sun_elev_calc(sun_elev_test_data):
+    for d in sun_elev_test_data:
+        pred_sun_el = sun_utils.sun_elevation(
+            BoundingBox(*d['bbox']),
+            (10, 10),
+            d['date_acquired'],
+            d['scene_center_time']
+            )
+        assert pred_sun_el.max() > d['mtl_sun_elevation']
+        assert pred_sun_el.min() < d['mtl_sun_elevation']
+

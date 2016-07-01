@@ -51,12 +51,13 @@ def time_to_dec_hour(parsedtime):
             )
 
 
-def calculate_declination(d, lat):
+def calculate_declination(d):
     """
     Calculate the declination of the sun in radians based on a given day.
     As reference +23.26 degrees at the northern summer solstice, -23.26
     degrees at the southern summer solstice.
     See: https://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
+    
 
     Parameters
     -----------
@@ -69,26 +70,28 @@ def calculate_declination(d, lat):
         the declination on day d
 
     """
-    # is the mean latitude positive or negative?
-    # 1 if True, -1 if False
-
-    # is_north_multiplier = (((np.mean(lat) > 0) + 1) * 2 - 3)
-
     # return - np.arcsin(0.39799 * np.cos(
     #             np.deg2rad(0.98565) *
     #             (d + 10) +
     #             np.deg2rad(1.914) *
     #             np.sin(np.deg2rad(0.98565) * (d - 2))))
-    return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
+    # return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
+    return np.arcsin(
+        np.sin(np.deg2rad(23.45)) *
+              np.sin(np.deg2rad(360. / 365.) *
+              (d - 81))
+    )
 
 
-def solar_angle(utc_hour, longitude):
+def solar_angle(day, utc_hour, longitude):
     """
-    Given a utc decimal hour and longitudes, compute the solar angle
+    Given a day, utc decimal hour, and longitudes, compute the solar angle
     for these longitudes
 
     Parameters
     -----------
+    day: int
+        days of the year with jan 1 as day = 1
     utc_hour: float
         decimal hour of the day in utc time to compute solar angle for
     longitude: ndarray or float
@@ -98,12 +101,23 @@ def solar_angle(utc_hour, longitude):
     --------
     solar angle in degrees for these longitudes
     """
+    
     localtime = (longitude / 180.0) * 12 + utc_hour
+    
+    lstm = 15 * (localtime - utc_hour)
 
-    return ((localtime - 12.0) * (360.0 / 24.0))
+    B = np.deg2rad((360. / 365.) * (day - 81))
+
+    eot = (9.87 * 
+           np.sin(2 * B) -
+          7.53 * np.cos(B) -
+          1.5 * np.sin(B))
+    
+    return 15 * (localtime +
+                 (4 * (longitude - lstm) + eot) / 60.0 - 12)
 
 
-def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
+def _calculate_sun_elevation(longitude, latitude, declination, day, utc_hour):
     """
     Calculates the solar elevation angle
     https://en.wikipedia.org/wiki/Solar_zenith_angle
@@ -116,6 +130,8 @@ def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
         latitudes of the point(s) to compute solar angle for
     declination: float
         declination of the sun in radians
+    day: int
+        days of the year with jan 1 as day = 1
     utc_hour: float
         decimal hour from a datetime object
 
@@ -123,18 +139,17 @@ def _calculate_sun_elevation(longitude, latitude, declination, utc_hour):
     --------
     the solar elevation angle in degrees
     """
-    hour_angle = solar_angle(utc_hour, longitude)
+    hour_angle = np.deg2rad(solar_angle(day, utc_hour, longitude))
 
-    return np.rad2deg(
-            np.arcsin(
-                (np.sin(np.deg2rad(latitude)) *
-                np.sin(declination)) +
-                (np.cos(np.deg2rad(latitude)) *
-                np.cos(declination) *
-                np.cos(np.deg2rad(hour_angle)))
-                )
-            )
+    latitude = np.deg2rad(latitude)
 
+    return np.rad2deg(np.arcsin(
+        np.sin(declination) *
+        np.sin(latitude) +
+        np.cos(declination) *
+        np.cos(latitude) *
+        np.cos(hour_angle)
+    ))
 
 def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     """
@@ -175,7 +190,7 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     lat = (lat.astype(np.float32) * yCell) + bounds.bottom + (yCell / 2.0)
 
     decimal_hour = time_to_dec_hour(utc_time)
-    solar_hour_angle = solar_angle(decimal_hour, lng)
-    declination = calculate_declination(utc_time.timetuple().tm_yday, lat)
 
-    return _calculate_sun_elevation(lng, lat, declination, decimal_hour)
+    declination = calculate_declination(utc_time.timetuple().tm_yday)
+
+    return _calculate_sun_elevation(lng, lat, declination, utc_time.timetuple().tm_yday, decimal_hour)

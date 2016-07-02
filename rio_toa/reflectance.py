@@ -99,12 +99,10 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, rescale_factor, c
     A = toa_utils._load_mtl_key(mtl,
         ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
         band)
-    E = toa_utils._load_mtl_key(mtl, 
-        ['L1_METADATA_FILE', 'IMAGE_ATTRIBUTES','SUN_ELEVATION'])
-    date_collected = toa_utils._load_mtl_key(mtl,
-                    ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'DATE_ACQUIRED'])
-    time_collected_utc = toa_utils._load_mtl_key(mtl,
-                    ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'SCENE_CENTER_TIME'])
+    E = mtl['L1_METADATA_FILE']['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+
+    date_collected = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED']
+    time_collected_utc = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
     dst_dtype = np.__dict__[dst_dtype]
 

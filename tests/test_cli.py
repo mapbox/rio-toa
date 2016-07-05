@@ -25,14 +25,25 @@ def test_cli_reflectance(tmpdir):
     output = str(tmpdir.join('toa_reflectance.tif'))
     runner = CliRunner()
     result = runner.invoke(reflectance, 
-        ['tests/data/tiny_LC81390452014295LGN00_B5.TIF',
-         'tests/data/LC81390452014295LGN00_MTL.json',
+        ['tests/data/LC81060712016134LGN00_B3.TIF',
+         'tests/data/LC81060712016134LGN00_MTL.json',
          output])
     assert result.exit_code == 0
     with rasterio.open(output) as out:
         assert out.count == 1
         assert out.dtypes[0] == rasterio.float32
 
+def test_cli_reflectance_readtemplate(tmpdir):
+    output = str(tmpdir.join('toa_reflectance_readtemplate.TIF'))
+    runner = CliRunner()
+    result = runner.invoke(reflectance, 
+        ['tests/data/tiny_LC81390452014295LGN00_B5.TIF',
+         'tests/data/LC81390452014295LGN00_MTL.json',
+         output, '--readtemplate', '.*/tiny_LC8.*\_B{b}.TIF'])
+    assert result.exit_code == 0
+    with rasterio.open(output) as out:
+        assert out.count == 1
+        assert out.dtypes[0] == rasterio.float32
 
 def test_cli_parsemtl(tmpdir):
     runner = CliRunner()

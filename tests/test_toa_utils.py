@@ -4,9 +4,12 @@ from rio_toa.toa_utils import (
 	_parse_bands_from_filename,
 	_load_mtl_key, _load_mtl)
 
+def test_parse_band_from_filename_default():
+	assert _parse_bands_from_filename(['data/LC81070352015122LGN00_B3.TIF'], '.*/LC8.*\_B{b}.TIF') == [3]
+
 
 def test_parse_band_from_filename_good():
-	assert _parse_bands_from_filename(['LC81070352015122LGN00_B3.tif'], 'LC8.*_B{b}.tif') == [3]
+	assert _parse_bands_from_filename(['tiny_LC81070352015122LGN00_B3.tif'], 'tiny_LC8.*_B{b}.tif') == [3]
 
 
 def test_parse_band_from_filename_bad():
@@ -14,10 +17,16 @@ def test_parse_band_from_filename_bad():
 		_parse_bands_from_filename(['LC81070352015122LGN00_B3.tif'], 'LC8NOGOOD.*_B{b}.tif')
 
 
+def test_parse_band_from_filename_bad2():
+	with pytest.raises(ValueError):
+		_parse_bands_from_filename(['data/tiny_LC81070352015122LGN00_B3.tif'], '.*/LC8.*\_B{b}.TIF')
+
+
 def test_load_mtl():
 	src_mtl = 'tests/data/LC80100202015018LGN00_MTL.json'
 	mtl = _load_mtl(src_mtl)
 	assert isinstance(mtl, dict)
+
 
 def test_load_txt_mtl_1():
 	txtmtl = _load_mtl('tests/data/LC81060712016134LGN00_MTL.txt')

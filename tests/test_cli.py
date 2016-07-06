@@ -42,7 +42,7 @@ def test_cli_radiance_fail(tmpdir):
     result = runner.invoke(radiance, 
         ['tests/data/tiny_LC80100202015018LGN00_B1.TIF',
          'tests/data/LC80100202015018LGN00_MTL.json',
-         output])
+         output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
 
 
@@ -79,6 +79,16 @@ def test_cli_reflectance_fail(tmpdir):
         ['tests/data/tiny_LC81390452014295LGN00_B5.TIF',
          'tests/data/LC81390452014295LGN00_MTL.json',
          output])
+    assert result.exit_code != 0
+
+
+def test_cli_reflectance_fail2(tmpdir):
+    output = str(tmpdir.join('toa_reflectance_readtemplate.TIF'))
+    runner = CliRunner()
+    result = runner.invoke(reflectance, 
+        ['tests/data/tiny_LC81390452014295LGN00_B5.TIF',
+         'tests/data/LC81390452014295LGN00_MTL.json',
+         output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
 
 

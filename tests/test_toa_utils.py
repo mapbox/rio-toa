@@ -13,6 +13,9 @@ def test_parse_band_from_filename_bad():
 	with pytest.raises(ValueError):
 		_parse_bands_from_filename(['LC81070352015122LGN00_B3.tif'], 'LC8NOGOOD.*_B{b}.tif')
 
+def test_parse_band_from_filename_bad2():
+	with pytest.raises(ValueError):
+		_parse_bands_from_filename(['tiny_LC81070352015122LGN00_B3.tif'], 'LC8.*_B{b}.tif')
 
 def test_load_mtl():
 	src_mtl = 'tests/data/LC80100202015018LGN00_MTL.json'

@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import rasterio as rio
+import collections
 from rasterio.coords import BoundingBox
 import riomucho
 from rasterio import warp
@@ -79,7 +80,7 @@ def _reflectance_worker(open_files, window, ij, g_args):
         g_args['rescale_factor'], g_args['dst_dtype'])
 
 
-def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, creation_options, band, dst_dtype, processes, pixel_sunangle):
+def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, creation_options, bands, dst_dtype, processes, pixel_sunangle):
     """
     Parameters
     ------------
@@ -93,20 +94,19 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
     """
     mtl = toa_utils._load_mtl(src_mtl)
 
-    M = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_MULT_BAND_'],
-        band)
-    A = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
-        band)
     E = mtl['L1_METADATA_FILE']['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
-
     date_collected = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED']
     time_collected_utc = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
     dst_dtype = np.__dict__[dst_dtype]
 
-    for src_path in src_paths:
+    for band, src_path in zip(bands, src_paths):
+        M = toa_utils._load_mtl_key(mtl,
+            ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_MULT_BAND_'],
+            band)
+        A = toa_utils._load_mtl_key(mtl,
+            ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
+            band)
 
         with rio.open(src_path) as src:
             dst_profile = src.profile.copy()
@@ -132,7 +132,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
             'time_collected_utc': time_collected_utc
         }
 
-        with riomucho.RioMucho([src_path], dst_path, _reflectance_worker,
+        with riomucho.RioMucho([src_path], dst_path.split('.tif')[0] + '_' + str(band) + '.tif', _reflectance_worker,
             options=dst_profile,
             global_args=global_args,
             mode='manual_read') as rm:

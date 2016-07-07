@@ -64,9 +64,10 @@ def reflectance(ctx, src_path, src_mtl, dst_path, dst_dtype, rescale_factor, rea
         logger.setLevel(logging.DEBUG)
 
     if l8_bidx == 0:
-        l8_bidx = _parse_bands_from_filename(list(src_path), readtemplate)[0]
+        l8_bidx = _parse_bands_from_filename(list(src_path), readtemplate)
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
+
     calculate_landsat_reflectance(src_path, src_mtl, dst_path,
                                   rescale_factor, creation_options, l8_bidx, 
                                   dst_dtype, workers, pixel_sunangle)

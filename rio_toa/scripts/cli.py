@@ -43,7 +43,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
     calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers)
 
 @click.command('reflectance')
-@click.argument('src_path', type=click.Path(exists=True))
+@click.argument('src_path', nargs= -1, type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype', type=click.Choice(['float32', 'float64', 'uint16', 'uint8']), default='float32')
@@ -64,10 +64,9 @@ def reflectance(ctx, src_path, src_mtl, dst_path, dst_dtype, rescale_factor, rea
         logger.setLevel(logging.DEBUG)
 
     if l8_bidx == 0:
-        l8_bidx = _parse_bands_from_filename([src_path], readtemplate)[0]
+        l8_bidx = _parse_bands_from_filename(list(src_path), readtemplate)[0]
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
-
     calculate_landsat_reflectance(src_path, src_mtl, dst_path,
                                   rescale_factor, creation_options, l8_bidx, 
                                   dst_dtype, workers, pixel_sunangle)

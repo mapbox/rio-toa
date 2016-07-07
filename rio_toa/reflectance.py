@@ -79,7 +79,7 @@ def _reflectance_worker(open_files, window, ij, g_args):
         g_args['rescale_factor'], g_args['dst_dtype'])
 
 
-def calculate_landsat_reflectance(src_path, src_mtl, dst_path, rescale_factor, creation_options, band, dst_dtype, processes, pixel_sunangle):
+def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, creation_options, band, dst_dtype, processes, pixel_sunangle):
     """
     Parameters
     ------------
@@ -106,33 +106,35 @@ def calculate_landsat_reflectance(src_path, src_mtl, dst_path, rescale_factor, c
 
     dst_dtype = np.__dict__[dst_dtype]
 
-    with rio.open(src_path) as src:
-        dst_profile = src.profile.copy()
-        src_nodata = src.nodata
-        src_meta = src.meta
-        shape = src.shape
+    for src_path in src_paths:
 
-        for co in creation_options:
-            dst_profile[co] = creation_options[co]
+        with rio.open(src_path) as src:
+            dst_profile = src.profile.copy()
+            src_nodata = src.nodata
+            src_meta = src.meta
+            shape = src.shape
 
-        dst_profile['dtype'] = dst_dtype
+            for co in creation_options:
+                dst_profile[co] = creation_options[co]
 
-    global_args = {
-        'A': A,
-        'M': M,
-        'E': E,
-        'src_nodata': 0,
-        'src_crs': src_meta['crs'],
-        'dst_dtype': dst_dtype,
-        'rescale_factor': rescale_factor,
-        'pixel_sunangle': pixel_sunangle,
-        'date_collected': date_collected,
-        'time_collected_utc': time_collected_utc
-    }
+            dst_profile['dtype'] = dst_dtype
 
-    with riomucho.RioMucho([src_path], dst_path, _reflectance_worker,
-        options=dst_profile,
-        global_args=global_args,
-        mode='manual_read') as rm:
+        global_args = {
+            'A': A,
+            'M': M,
+            'E': E,
+            'src_nodata': 0,
+            'src_crs': src_meta['crs'],
+            'dst_dtype': dst_dtype,
+            'rescale_factor': rescale_factor,
+            'pixel_sunangle': pixel_sunangle,
+            'date_collected': date_collected,
+            'time_collected_utc': time_collected_utc
+        }
 
-        rm.run(processes)
+        with riomucho.RioMucho([src_path], dst_path, _reflectance_worker,
+            options=dst_profile,
+            global_args=global_args,
+            mode='manual_read') as rm:
+
+            rm.run(processes)

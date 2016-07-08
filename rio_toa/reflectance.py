@@ -49,7 +49,6 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-
     rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
     rf[img == src_nodata] = 0.0
 
@@ -67,6 +66,15 @@ def _reflectance_worker(open_files, window, ij, g_args):
         data = riomucho.utils.array_stack(
                 [src.read(window=window).astype(np.float32) 
                     for src in open_files])
+        # M_stack = np.ones(data.shape)
+        # A_stack = np.ones(data.shape)
+
+        # for i in xrange(data.shape[0]):
+        #     M_stack[i] *= g_args['M'][i]
+        #     A_stack[i] *= g_args['A'][i]
+        # g_args.update(M=M_stack)
+        # g_args.update(A=A_stack)
+
     else:
         f = open_files[0]
         data = f.read(window=window)
@@ -126,10 +134,6 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
 
             dst_profile['dtype'] = dst_dtype
 
-            if stack and all(map(lambda v: v in bands, [2,3,4])):
-                dst_profile.update(count=len(bands))
-                dst_profile.update(photometric='rgb')
-
     global_args = {
         'A': A,
         'M': M,
@@ -143,9 +147,13 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
         'time_collected_utc': time_collected_utc,
         'stack': stack
     }
-    print global_args
 
-    if stack and len(bands) > 1:
+    if stack and all(map(lambda v: v in bands, [2,3,4])):
+        dst_profile.update(count=len(bands))
+        dst_profile.update(photometric='rgb')
+        global_args.update(M=M[0])
+        global_args.update(A=A[0])
+
         with riomucho.RioMucho(list(src_paths),
             dst_path,
             _reflectance_worker,
@@ -154,6 +162,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
             mode='manual_read') as rm:
 
             rm.run(processes)
+
     else:
         for idx, band in enumerate(bands):
             global_args.update(M=M[idx])

@@ -140,10 +140,9 @@ def test_calculate_landsat_reflectance(test_var, capfd):
     dst_dtype = 'float32'
     processes = 1
     pixel_sunangle = True
-    reflectance.calculate_landsat_reflectance(src_path, src_mtl, dst_path, \
-                                rescale_factor, creation_options, band, \
-                                dst_dtype, processes, pixel_sunangle)
+    stack = False
+    reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path, \
+                                rescale_factor, creation_options, [band], \
+                                stack, dst_dtype, processes, pixel_sunangle)
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
-
-

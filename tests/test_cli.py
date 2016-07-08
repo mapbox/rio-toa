@@ -79,8 +79,8 @@ def test_cli_reflectance_l8_bidx(tmpdir):
          'tests/data/LC81390452014295LGN00_MTL.json',
          output, '--l8-bidx', 'notint'])
     assert result.exit_code != 0
-    assert result.output == 'Usage: reflectance [OPTIONS] SRC_PATH SRC_MTL '\
-    'DST_PATH\n\nError: Invalid value for "--l8-bidx": notint is not a valid integer\n'
+    assert 'Error: Invalid value for "--l8-bidx":' \
+           ' notint is not a valid integer\n' in result.output 
 
 def test_cli_reflectance_fail(tmpdir):
     output = str(tmpdir.join('toa_reflectance_readtemplate.TIF'))

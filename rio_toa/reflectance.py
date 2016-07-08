@@ -170,7 +170,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
 
             # creats n output tifs
             with riomucho.RioMucho([src_paths[idx]],
-                dst_path.split('.tif')[0] + '_' + str(band) + '.tif',
+                dst_path,
                 _reflectance_worker,
                 options=dst_profile,
                 global_args=global_args,

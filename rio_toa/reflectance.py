@@ -63,15 +63,21 @@ def _reflectance_worker(open_files, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
-    f = open_files[0]
-    data = f.read(window=window)
+    if g_args['stack']:
+        data = riomucho.utils.array_stack(
+                [src.read(window=window).astype(np.float32) 
+                    for src in open_files])
+    else:
+        f = open_files[0]
+        data = f.read(window=window)
+
     if g_args['pixel_sunangle']:
         bbox = BoundingBox(*warp.transform_bounds(g_args['src_crs'], {'init': u'epsg:4326'}, *f.window_bounds(window)))
         E = sun_utils.sun_elevation(bbox, data.shape, g_args['date_collected'], g_args['time_collected_utc'])
     else:
         E = g_args['E']
 
-    return toa_utils.rescale(reflectance(
+    output = toa_utils.rescale(reflectance(
         data,
         g_args['M'],
         g_args['A'],
@@ -79,8 +85,10 @@ def _reflectance_worker(open_files, window, ij, g_args):
         g_args['src_nodata']),
         g_args['rescale_factor'], g_args['dst_dtype'])
 
+    return output
 
-def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, creation_options, bands, dst_dtype, processes, pixel_sunangle):
+
+def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, creation_options, bands, stack, dst_dtype, processes, pixel_sunangle):
     """
     Parameters
     ------------
@@ -99,42 +107,64 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
     time_collected_utc = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
     dst_dtype = np.__dict__[dst_dtype]
+    M, A = [], []
 
     for band, src_path in zip(bands, src_paths):
-        M = toa_utils._load_mtl_key(mtl,
+        M.append(toa_utils._load_mtl_key(mtl,
             ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_MULT_BAND_'],
-            band)
-        A = toa_utils._load_mtl_key(mtl,
+            band))
+        A.append(toa_utils._load_mtl_key(mtl,
             ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
-            band)
+            band))
 
         with rio.open(src_path) as src:
             dst_profile = src.profile.copy()
             src_nodata = src.nodata
-            src_meta = src.meta
-            shape = src.shape
 
             for co in creation_options:
                 dst_profile[co] = creation_options[co]
 
             dst_profile['dtype'] = dst_dtype
 
-        global_args = {
-            'A': A,
-            'M': M,
-            'E': E,
-            'src_nodata': 0,
-            'src_crs': src_meta['crs'],
-            'dst_dtype': dst_dtype,
-            'rescale_factor': rescale_factor,
-            'pixel_sunangle': pixel_sunangle,
-            'date_collected': date_collected,
-            'time_collected_utc': time_collected_utc
-        }
+            if stack and all(map(lambda v: v in bands, [2,3,4])):
+                dst_profile.update(count=len(bands))
+                dst_profile.update(photometric='rgb')
 
-        with riomucho.RioMucho([src_path], dst_path.split('.tif')[0] + '_' + str(band) + '.tif', _reflectance_worker,
+    global_args = {
+        'A': A,
+        'M': M,
+        'E': E,
+        'src_nodata': 0,
+        'src_crs': dst_profile['crs'],
+        'dst_dtype': dst_dtype,
+        'rescale_factor': rescale_factor,
+        'pixel_sunangle': pixel_sunangle,
+        'date_collected': date_collected,
+        'time_collected_utc': time_collected_utc,
+        'stack': stack
+    }
+    print global_args
+
+    if stack and len(bands) > 1:
+        with riomucho.RioMucho(list(src_paths),
+            dst_path,
+            _reflectance_worker,
             options=dst_profile,
             global_args=global_args,
             mode='manual_read') as rm:
 
             rm.run(processes)
+    else:
+        for idx, band in enumerate(bands):
+            global_args.update(M=M[idx])
+            global_args.update(A=A[idx])
+
+            # creats n output tifs
+            with riomucho.RioMucho([src_paths[idx]],
+                dst_path.split('.tif')[0] + '_' + str(band) + '.tif',
+                _reflectance_worker,
+                options=dst_profile,
+                global_args=global_args,
+                mode='manual_read') as rm:
+
+                rm.run(processes)

@@ -153,7 +153,6 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
         dst_profile.update(photometric='rgb')
         global_args.update(M=M[0])
         global_args.update(A=A[0])
-
         with riomucho.RioMucho(list(src_paths),
             dst_path,
             _reflectance_worker,
@@ -163,17 +162,32 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
 
             rm.run(processes)
 
-    else:
+    elif len(bands) == 1:
+        dst_profile.update(count=1)
+        global_args.update(M=M[0])
+        global_args.update(A=A[0])
+        with riomucho.RioMucho([src_paths[0]],
+            dst_path,
+            _reflectance_worker,
+            options=dst_profile,
+            global_args=global_args,
+            mode='manual_read') as rm:
+
+            rm.run(processes)
+
+    if not stack and len(bands) > 1:
         for idx, band in enumerate(bands):
             global_args.update(M=M[idx])
             global_args.update(A=A[idx])
 
             # creats n output tifs
             with riomucho.RioMucho([src_paths[idx]],
-                dst_path,
+                dst_path.split('.TIF')[0] + '_' + str(band) + '.TIF',
                 _reflectance_worker,
                 options=dst_profile,
                 global_args=global_args,
                 mode='manual_read') as rm:
 
                 rm.run(processes)
+
+

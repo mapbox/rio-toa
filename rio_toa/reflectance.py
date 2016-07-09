@@ -66,6 +66,10 @@ def _reflectance_worker(open_files, window, ij, g_args):
         data = riomucho.utils.array_stack(
                 [src.read(window=window).astype(np.float32) 
                     for src in open_files])
+        # ====
+        # To Do:
+        # M, A from single values to dXnXm arrays to match multiband
+        # ====
         # M_stack = np.ones(data.shape)
         # A_stack = np.ones(data.shape)
 
@@ -148,9 +152,16 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
         'stack': stack
     }
 
+    # ====
+    # To Do:
+    # rio stack and parallel handle all stacking.
+    # rio toa should output single entity (single band tif/stacked multiband)
+    # ====
+
     if stack and all(map(lambda v: v in bands, [2,3,4])):
         dst_profile.update(count=len(bands))
         dst_profile.update(photometric='rgb')
+        # To Do: Fix rounding error due to M_stack, A_stack L#73
         global_args.update(M=M[0])
         global_args.update(A=A[0])
         with riomucho.RioMucho(list(src_paths),

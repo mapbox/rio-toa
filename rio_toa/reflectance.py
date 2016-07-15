@@ -68,13 +68,12 @@ def _reflectance_worker(open_files, window, ij, g_args):
     else:
         E = g_args['E']
 
-    if g_args['bands'] > 1 :
+    if g_args['stack'] and g_args['bands'] > 1 :
         data = riomucho.utils.array_stack(
                 [src.read(window=window).astype(np.float32) 
                     for src in open_files])
         M_stack = np.ones(data.shape)
         A_stack = np.ones(data.shape)
-
 
         for i in xrange(data.shape[0]):
             M_stack[i] *= g_args['M'][i]

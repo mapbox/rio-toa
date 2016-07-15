@@ -62,40 +62,42 @@ def _reflectance_worker(open_files, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
-    if g_args['stack']:
-        data = riomucho.utils.array_stack(
-                [src.read(window=window).astype(np.float32) 
-                    for src in open_files])
-        # ====
-        # To Do:
-        # M, A from single values to dXnXm arrays to match multiband
-        # ====
-        # M_stack = np.ones(data.shape)
-        # A_stack = np.ones(data.shape)
-
-        # for i in xrange(data.shape[0]):
-        #     M_stack[i] *= g_args['M'][i]
-        #     A_stack[i] *= g_args['A'][i]
-        # g_args.update(M=M_stack)
-        # g_args.update(A=A_stack)
-
-    else:
-        f = open_files[0]
-        data = f.read(window=window)
-
     if g_args['pixel_sunangle']:
         bbox = BoundingBox(*warp.transform_bounds(g_args['src_crs'], {'init': u'epsg:4326'}, *f.window_bounds(window)))
         E = sun_utils.sun_elevation(bbox, data.shape, g_args['date_collected'], g_args['time_collected_utc'])
     else:
         E = g_args['E']
 
-    output = toa_utils.rescale(reflectance(
-        data,
-        g_args['M'],
-        g_args['A'],
-        E,
-        g_args['src_nodata']),
-        g_args['rescale_factor'], g_args['dst_dtype'])
+    if g_args['bands'] > 1 :
+        data = riomucho.utils.array_stack(
+                [src.read(window=window).astype(np.float32) 
+                    for src in open_files])
+        M_stack = np.ones(data.shape)
+        A_stack = np.ones(data.shape)
+
+
+        for i in xrange(data.shape[0]):
+            M_stack[i] *= g_args['M'][i]
+            A_stack[i] *= g_args['A'][i]
+        output = toa_utils.rescale(reflectance(
+                 data,
+                 M_stack,
+                 A_stack,
+                 E,
+                 g_args['src_nodata']),
+                 g_args['rescale_factor'], g_args['dst_dtype'])
+
+    else:
+        f = open_files[0]
+        data = f.read(window=window)
+
+        output = toa_utils.rescale(reflectance(
+                 data,
+                 g_args['M'],
+                 g_args['A'],
+                 E,
+                 g_args['src_nodata']),
+                 g_args['rescale_factor'], g_args['dst_dtype'])
 
     return output
 
@@ -149,21 +151,15 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
         'pixel_sunangle': pixel_sunangle,
         'date_collected': date_collected,
         'time_collected_utc': time_collected_utc,
-        'stack': stack
+        'stack': stack,
+        'bands': len(bands)
     }
-
-    # ====
-    # To Do:
-    # rio stack and parallel handle all stacking.
-    # rio toa should output single entity (single band tif/stacked multiband)
-    # ====
 
     if stack:
         dst_profile.update(count=len(bands))
         dst_profile.update(photometric='rgb')
-        # To Do: Fix rounding error due to M_stack, A_stack L#73
-        global_args.update(M=M[0])
-        global_args.update(A=A[0])
+        global_args.update(M=M)
+        global_args.update(A=A)
         with riomucho.RioMucho(list(src_paths),
             dst_path,
             _reflectance_worker,
@@ -173,17 +169,19 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
 
             rm.run(processes)
 
-    elif len(bands) == 1:
-        dst_profile.update(count=1)
-        global_args.update(M=M[0])
-        global_args.update(A=A[0])
-        with riomucho.RioMucho([src_paths[0]],
-            dst_path,
-            _reflectance_worker,
-            options=dst_profile,
-            global_args=global_args,
-            mode='manual_read') as rm:
+    if not stack and len(bands) > 1:
+        for idx, band in enumerate(bands):
+            global_args.update(M=M[idx])
+            global_args.update(A=A[idx])
 
-            rm.run(processes)
+            # creats n output tifs
+            with riomucho.RioMucho([src_paths[idx]],
+                dst_path.split('.TIF')[0] + '_' + str(band) + '.TIF',
+                _reflectance_worker,
+                options=dst_profile,
+                global_args=global_args,
+                mode='manual_read') as rm:
+
+                rm.run(processes)
 
 

@@ -52,7 +52,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0,
     help="L8 Band that the src_path represents (Default is parsed from file name)")
-@click.option('--stack', '-s', is_flag=True, default=True)
+@click.option('--stack', '-s', is_flag=True, default=True, help="unsorted stacking is true by default")
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.option('--pixel-sunangle', '-p', is_flag=True, default=False, help="per pixel sun elevation")
 @click.pass_context

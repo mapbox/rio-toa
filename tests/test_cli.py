@@ -101,23 +101,6 @@ def test_cli_reflectance_fail2(tmpdir):
          output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
 
-def test_cli_reflectance_multiband_nostack(tmpdir):
-    output = str(tmpdir.join('toa_reflectance_multiband_nostack.TIF'))
-    runner = CliRunner()
-    result = runner.invoke(reflectance,
-        ['tests/data/tiny_LC80460282016177LGN00_B2.TIF',
-         'tests/data/tiny_LC80460282016177LGN00_B3.TIF',
-         'tests/data/LC80460282016177LGN00_MTL.json',
-          output, '-t', '.*/tiny_LC8.*\_B{b}.TIF', '--dst-dtype', 'uint16'])
-    assert len(os.listdir(str(tmpdir))) == 2
-    assert result.exit_code == 0
-    with rasterio.open(output.split('.TIF')[0] + '_' + str(2) + '.TIF') as out:
-        assert out.count == 1
-        assert out.dtypes[0] == rasterio.uint16
-    with rasterio.open(output.split('.TIF')[0] + '_' + str(3) + '.TIF') as out:
-        assert out.count == 1
-        assert out.dtypes[0] == rasterio.uint16
-
 def test_cli_reflectance_multiband_stack(tmpdir):
     output = str(tmpdir.join('toa_reflectance_multiband_stack.TIF'))
     runner = CliRunner()
@@ -126,7 +109,7 @@ def test_cli_reflectance_multiband_stack(tmpdir):
          'tests/data/tiny_LC80460282016177LGN00_B3.TIF',
          'tests/data/tiny_LC80460282016177LGN00_B4.TIF',
          'tests/data/LC80460282016177LGN00_MTL.json',
-          output, '-t', '.*/tiny_LC8.*\_B{b}.TIF', '--dst-dtype', 'uint16', '-s'])
+          output, '-t', '.*/tiny_LC8.*\_B{b}.TIF', '--dst-dtype', 'uint16'])
     assert len(os.listdir(str(tmpdir))) == 1
     assert result.exit_code == 0
     with rasterio.open(output) as out:

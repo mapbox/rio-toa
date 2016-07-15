@@ -52,7 +52,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0,
     help="L8 Band that the src_path represents (Default is parsed from file name)")
-@click.option('--stack', '-s', is_flag=True, default=False) # non-stacking is the default for now
+@click.option('--stack', '-s', is_flag=True, default=True)
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.option('--pixel-sunangle', '-p', is_flag=True, default=False, help="per pixel sun elevation")
 @click.pass_context
@@ -69,7 +69,7 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype, rescale_factor, re
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
-    calculate_landsat_reflectance(sorted(src_paths, reverse=True), src_mtl, dst_path,
+    calculate_landsat_reflectance(list(src_paths), src_mtl, dst_path,
                                   rescale_factor, creation_options, sorted(l8_bidx, reverse=True),
                                   stack, dst_dtype, workers, pixel_sunangle)
 

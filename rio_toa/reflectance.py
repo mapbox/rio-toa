@@ -158,7 +158,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
     # rio toa should output single entity (single band tif/stacked multiband)
     # ====
 
-    if stack and all(map(lambda v: v in bands, [2,3,4])):
+    if stack:
         dst_profile.update(count=len(bands))
         dst_profile.update(photometric='rgb')
         # To Do: Fix rounding error due to M_stack, A_stack L#73
@@ -185,20 +185,5 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
             mode='manual_read') as rm:
 
             rm.run(processes)
-
-    if not stack and len(bands) > 1:
-        for idx, band in enumerate(bands):
-            global_args.update(M=M[idx])
-            global_args.update(A=A[idx])
-
-            # creats n output tifs
-            with riomucho.RioMucho([src_paths[idx]],
-                dst_path.split('.TIF')[0] + '_' + str(band) + '.TIF',
-                _reflectance_worker,
-                options=dst_profile,
-                global_args=global_args,
-                mode='manual_read') as rm:
-
-                rm.run(processes)
 
 

@@ -21,14 +21,18 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     Z = 90 - np.radians(E)
 
 
-    where:              
+    where:
 
-        R_raw = TOA planetary reflectance, without correction for solar angle.  Note that P does not contain a correction for the sun angle. 
+        R_raw = TOA planetary reflectance, without correction for solar angle.
+                Note that P does not contain a correction for the sun angle.
         R = TOA reflectance with a correction for the sun angle.
-        MR = Band-specific multiplicative rescaling factor from the metadata (REFLECTANCE_MULT_BAND_x, where x is the band number)
-        AR = Band-specific additive rescaling factor from the metadata (REFLECTANCE_ADD_BAND_x, where x is the band number)
+        MR = Band-specific multiplicative rescaling factor from the metadata
+            (REFLECTANCE_MULT_BAND_x, where x is the band number)
+        AR = Band-specific additive rescaling factor from the metadata
+            (REFLECTANCE_ADD_BAND_x, where x is the band number)
         Q = Quantized and calibrated standard product pixel values (DN)
-        E = Local sun elevation angle. The scene center sun elevation angle in degrees is provided in the metadata (SUN_ELEVATION).
+        E = Local sun elevation angle. The scene center sun elevation angle
+            in degrees is provided in the metadata (SUN_ELEVATION).
         Z = Local solar zenith angle
 
     Parameters
@@ -63,21 +67,26 @@ def _reflectance_worker(open_files, window, ij, g_args):
     different output datatypes
     """
     if g_args['pixel_sunangle']:
-        bbox = BoundingBox(*warp.transform_bounds(g_args['src_crs'], {'init': u'epsg:4326'}, *f.window_bounds(window)))
-        E = sun_utils.sun_elevation(bbox, data.shape, g_args['date_collected'], g_args['time_collected_utc'])
+        bbox = BoundingBox(*warp.transform_bounds(g_args['src_crs'],
+                           {'init': u'epsg:4326'},
+                           *f.window_bounds(window)))
+        E = sun_utils.sun_elevation(bbox, data.shape,
+                                    g_args['date_collected'],
+                                    g_args['time_collected_utc'])
     else:
         E = g_args['E']
 
-    if g_args['stack'] and g_args['bands'] > 1 :
+    if g_args['bands'] > 1:
         data = riomucho.utils.array_stack(
-                [src.read(window=window).astype(np.float32) 
+                [src.read(window=window).astype(np.float32)
                     for src in open_files])
         M_stack = np.ones(data.shape)
         A_stack = np.ones(data.shape)
 
-        for i in xrange(data.shape[0]):
+        for i in range(data.shape[0]):
             M_stack[i] *= g_args['M'][i]
             A_stack[i] *= g_args['A'][i]
+
         output = toa_utils.rescale(reflectance(
                  data,
                  M_stack,
@@ -101,7 +110,9 @@ def _reflectance_worker(open_files, window, ij, g_args):
     return output
 
 
-def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, creation_options, bands, stack, dst_dtype, processes, pixel_sunangle):
+def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
+                                  creation_options, bands, dst_dtype,
+                                  processes, pixel_sunangle):
     """
     Parameters
     ------------
@@ -124,11 +135,13 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
 
     for band, src_path in zip(bands, src_paths):
         M.append(toa_utils._load_mtl_key(mtl,
-            ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_MULT_BAND_'],
-            band))
+                 ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING',
+                  'REFLECTANCE_MULT_BAND_'],
+                 band))
         A.append(toa_utils._load_mtl_key(mtl,
-            ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'REFLECTANCE_ADD_BAND_'],
-            band))
+                 ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING',
+                  'REFLECTANCE_ADD_BAND_'],
+                 band))
 
         with rio.open(src_path) as src:
             dst_profile = src.profile.copy()
@@ -150,37 +163,16 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor, 
         'pixel_sunangle': pixel_sunangle,
         'date_collected': date_collected,
         'time_collected_utc': time_collected_utc,
-        'stack': stack,
         'bands': len(bands)
     }
 
-    if stack:
-        dst_profile.update(count=len(bands))
-        dst_profile.update(photometric='rgb')
-        global_args.update(M=M)
-        global_args.update(A=A)
-        with riomucho.RioMucho(list(src_paths),
-            dst_path,
-            _reflectance_worker,
-            options=dst_profile,
-            global_args=global_args,
-            mode='manual_read') as rm:
+    dst_profile.update(count=len(bands))
+    dst_profile.update(photometric='rgb')
+    with riomucho.RioMucho(list(src_paths),
+                           dst_path,
+                           _reflectance_worker,
+                           options=dst_profile,
+                           global_args=global_args,
+                           mode='manual_read') as rm:
 
-            rm.run(processes)
-
-    if not stack and len(bands) > 1:
-        for idx, band in enumerate(bands):
-            global_args.update(M=M[idx])
-            global_args.update(A=A[idx])
-
-            # creats n output tifs
-            with riomucho.RioMucho([src_paths[idx]],
-                dst_path.split('.TIF')[0] + '_' + str(band) + '.TIF',
-                _reflectance_worker,
-                options=dst_profile,
-                global_args=global_args,
-                mode='manual_read') as rm:
-
-                rm.run(processes)
-
-
+        rm.run(processes)

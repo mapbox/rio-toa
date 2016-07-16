@@ -101,6 +101,7 @@ def test_cli_reflectance_fail2(tmpdir):
          output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
 
+
 def test_cli_reflectance_multiband_stack(tmpdir):
     output = str(tmpdir.join('toa_reflectance_multiband_stack.TIF'))
     runner = CliRunner()

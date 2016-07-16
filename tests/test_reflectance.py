@@ -65,6 +65,7 @@ def test_var():
 
     return src_path, src_mtl, dst_path
 
+
 @pytest.fixture
 def test_data(test_var):
     src_path, src_mtl, dst_path = test_var
@@ -108,6 +109,7 @@ def test_calculate_reflectance(test_data):
     assert toa.dtype == np.float32
     # assert np.array_equal(toa, tif_output)
 
+
 def test_calculate_reflectance2(test_data):
     tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
 
@@ -122,15 +124,24 @@ def test_calculate_reflectance2(test_data):
                                  'REFLECTANCE_ADD_BAND_'],
                                 5)
     date_collected = toa_utils._load_mtl_key(mtl,
-                    ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'DATE_ACQUIRED'])
+                                             ['L1_METADATA_FILE',
+                                              'PRODUCT_METADATA',
+                                              'DATE_ACQUIRED'])
     time_collected_utc = toa_utils._load_mtl_key(mtl,
-                    ['L1_METADATA_FILE', 'PRODUCT_METADATA', 'SCENE_CENTER_TIME'])
-    bounds = BoundingBox(*toa_utils._get_bounds_from_metadata(mtl['L1_METADATA_FILE']['PRODUCT_METADATA']))
-    E = sun_utils.sun_elevation(bounds, tif_shape, date_collected, time_collected_utc)
+                                                 ['L1_METADATA_FILE',
+                                                  'PRODUCT_METADATA',
+                                                  'SCENE_CENTER_TIME'])
+    bounds = BoundingBox(*toa_utils._get_bounds_from_metadata(
+                mtl['L1_METADATA_FILE']['PRODUCT_METADATA']))
+    E = sun_utils.sun_elevation(bounds,
+                                tif_shape,
+                                date_collected,
+                                time_collected_utc)
     toa = reflectance.reflectance(tif, M, A, E)
     assert toa.dtype == np.float32
     assert np.all(toa) < 1.5
     assert np.all(toa) >= 0.0
+
 
 def test_calculate_landsat_reflectance(test_var, capfd):
     src_path, src_mtl, dst_path = test_var
@@ -139,10 +150,26 @@ def test_calculate_landsat_reflectance(test_var, capfd):
     band = 5
     dst_dtype = 'float32'
     processes = 1
-    pixel_sunangle = True
-    stack = False
-    reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path, \
-                                rescale_factor, creation_options, [band], \
-                                stack, dst_dtype, processes, pixel_sunangle)
+    pixel_sunangle = False
+    reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path,
+                                rescale_factor, creation_options, [band],
+                                dst_dtype, processes, pixel_sunangle)
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
+
+
+def test_calculate_landsat_reflectance_fail(test_var, capfd):
+    src_path, src_mtl, dst_path = test_var
+    rescale_factor = 1.0
+    creation_options = {}
+    band = 5
+    dst_dtype = 'float32'
+    processes = 1
+    pixel_sunangle = True
+
+    reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path,
+                                rescale_factor, creation_options, [band],
+                                dst_dtype, processes, pixel_sunangle)
+    out, err = capfd.readouterr()
+    assert os.path.exists(dst_path)
+

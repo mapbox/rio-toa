@@ -70,12 +70,8 @@ def _reflectance_worker(open_files, window, ij, g_args):
             [src.read(window=window).astype(np.float32)
                 for src in open_files])
 
-    M_stack = np.ones(data.shape)
-    A_stack = np.ones(data.shape)
-
-    for i in range(data.shape[0]):
-        M_stack[i] *= g_args['M'][i]
-        A_stack[i] *= g_args['A'][i]
+    M_stack = np.ones(data.shape) * np.array(g_args['M'])[:, None, None]
+    A_stack = np.ones(data.shape) * np.array(g_args['A'])[:, None, None]
 
     if g_args['pixel_sunangle']:
         bboxes = [BoundingBox(
@@ -121,23 +117,17 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
     """
     mtl = toa_utils._load_mtl(src_mtl)
 
+    M = [mtl['L1_METADATA_FILE']['RADIOMETRIC_RESCALING']['REFLECTANCE_MULT_BAND_{}'.format(b)]
+            for b in bands]
+    A = [mtl['L1_METADATA_FILE']['RADIOMETRIC_RESCALING']['REFLECTANCE_ADD_BAND_{}'.format(b)]
+            for b in bands]
     E = mtl['L1_METADATA_FILE']['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
     date_collected = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED']
     time_collected_utc = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
     dst_dtype = np.__dict__[dst_dtype]
-    M, A = [], []
 
-    for band, src_path in zip(bands, src_paths):
-        M.append(toa_utils._load_mtl_key(mtl,
-                 ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING',
-                  'REFLECTANCE_MULT_BAND_'],
-                 band))
-        A.append(toa_utils._load_mtl_key(mtl,
-                 ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING',
-                  'REFLECTANCE_ADD_BAND_'],
-                 band))
-
+    for src_path in src_paths:
         with rio.open(src_path) as src:
             dst_profile = src.profile.copy()
             src_nodata = src.nodata

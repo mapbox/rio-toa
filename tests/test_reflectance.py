@@ -25,15 +25,6 @@ def test_reflectance():
                                     [0.1, 0., 0.1]]).astype(np.float32))
 
 
-def test_reflectance_zero():
-    band = np.array([[10508., 10272., 9869.],
-                     [0., 101., 101],
-                     [102., 0, 102]]).astype('float32')
-
-    # with pytest.raises(ValueError):
-    #     reflectance.reflectance(band, 0.2, -0.1, 0.0)
-
-
 def test_reflectance_wrong_type():
     band = np.array([[9931., 9872., 9939.],
                      [0., 5000., 100.],
@@ -61,7 +52,7 @@ def test_reflectance_wrong_shape():
 def test_var():
     src_path = 'tests/data/tiny_LC81390452014295LGN00_B5.TIF'
     src_mtl = 'tests/data/LC81390452014295LGN00_MTL.json'
-    dst_path = 'tests/data/tiny_LC81390452014295LGN00_B5_refl2.TIF'
+    dst_path = 'tests/data/tiny_LC81390452014295LGN00_B5_refl.TIF'
 
     return src_path, src_mtl, dst_path
 
@@ -106,8 +97,12 @@ def test_calculate_reflectance(test_data):
     assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
     assert isinstance(M, float)
     toa = reflectance.reflectance(tif, M, A, E)
-    assert toa.dtype == np.float32
-    # assert np.array_equal(toa, tif_output)
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.float32)
+    assert toa_rescaled.dtype == np.float32
+    assert np.min(tif_output) == np.min(toa_rescaled)
+    assert int(np.max(tif_output)) == int(np.max(toa_rescaled))
+
+
 
 
 def test_calculate_reflectance2(test_data):
@@ -144,7 +139,8 @@ def test_calculate_reflectance2(test_data):
 
 
 def test_calculate_landsat_reflectance(test_var, capfd):
-    src_path, src_mtl, dst_path = test_var
+    src_path, src_mtl = test_var[:2]
+    dst_path = '/tmp/ref1.TIF'
     rescale_factor = 1.0
     creation_options = {}
     band = 5
@@ -159,7 +155,8 @@ def test_calculate_landsat_reflectance(test_var, capfd):
 
 
 def test_calculate_landsat_reflectance_pixel(test_var, capfd):
-    src_path, src_mtl, dst_path = test_var
+    src_path, src_mtl = test_var[:2]
+    dst_path = '/tmp/ref1.TIF'
     rescale_factor = 1.0
     creation_options = {}
     band = 5

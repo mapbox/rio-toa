@@ -158,7 +158,7 @@ def test_calculate_landsat_reflectance(test_var, capfd):
     assert os.path.exists(dst_path)
 
 
-def test_calculate_landsat_reflectance_fail(test_var, capfd):
+def test_calculate_landsat_reflectance_pixel(test_var, capfd):
     src_path, src_mtl, dst_path = test_var
     rescale_factor = 1.0
     creation_options = {}

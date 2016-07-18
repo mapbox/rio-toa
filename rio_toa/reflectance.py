@@ -66,46 +66,41 @@ def _reflectance_worker(open_files, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
+    data = riomucho.utils.array_stack(
+            [src.read(window=window).astype(np.float32)
+                for src in open_files])
+
+    M_stack = np.ones(data.shape)
+    A_stack = np.ones(data.shape)
+
+    for i in range(data.shape[0]):
+        M_stack[i] *= g_args['M'][i]
+        A_stack[i] *= g_args['A'][i]
+
     if g_args['pixel_sunangle']:
-        bbox = BoundingBox(*warp.transform_bounds(g_args['src_crs'],
-                           {'init': u'epsg:4326'},
-                           *f.window_bounds(window)))
-        E = sun_utils.sun_elevation(bbox, data.shape,
-                                    g_args['date_collected'],
-                                    g_args['time_collected_utc'])
+        bboxes = [BoundingBox(
+                    *warp.transform_bounds(
+                        g_args['src_crs'],
+                        {'init': u'epsg:4326'},
+                        *open_files[i].window_bounds(window)))
+                  for i in range(data.shape[0])]
+        E_stack = riomucho.utils.array_stack(
+                    [sun_utils.sun_elevation(
+                        bbox,
+                        data.shape[1:],
+                        g_args['date_collected'],
+                        g_args['time_collected_utc'])[np.newaxis, :]
+                     for bbox in bboxes])
     else:
-        E = g_args['E']
+        E_stack = np.ones(data.shape) * g_args['E']
 
-    if g_args['bands'] > 1:
-        data = riomucho.utils.array_stack(
-                [src.read(window=window).astype(np.float32)
-                    for src in open_files])
-        M_stack = np.ones(data.shape)
-        A_stack = np.ones(data.shape)
-
-        for i in range(data.shape[0]):
-            M_stack[i] *= g_args['M'][i]
-            A_stack[i] *= g_args['A'][i]
-
-        output = toa_utils.rescale(reflectance(
-                 data,
-                 M_stack,
-                 A_stack,
-                 E,
-                 g_args['src_nodata']),
-                 g_args['rescale_factor'], g_args['dst_dtype'])
-
-    else:
-        f = open_files[0]
-        data = f.read(window=window)
-
-        output = toa_utils.rescale(reflectance(
-                 data,
-                 g_args['M'],
-                 g_args['A'],
-                 E,
-                 g_args['src_nodata']),
-                 g_args['rescale_factor'], g_args['dst_dtype'])
+    output = toa_utils.rescale(reflectance(
+             data,
+             M_stack,
+             A_stack,
+             E_stack,
+             g_args['src_nodata']),
+             g_args['rescale_factor'], g_args['dst_dtype'])
 
     return output
 

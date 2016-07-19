@@ -79,8 +79,8 @@ def test_cli_reflectance_l8_bidx(tmpdir):
          'tests/data/LC81390452014295LGN00_MTL.json',
          output, '--l8-bidx', 'notint'])
     assert result.exit_code != 0
-    assert result.output == 'Usage: reflectance [OPTIONS] SRC_PATH SRC_MTL '\
-    'DST_PATH\n\nError: Invalid value for "--l8-bidx": notint is not a valid integer\n'
+    assert 'Error: Invalid value for "--l8-bidx":' \
+           ' notint is not a valid integer\n' in result.output 
 
 def test_cli_reflectance_fail(tmpdir):
     output = str(tmpdir.join('toa_reflectance_readtemplate.TIF'))
@@ -100,6 +100,22 @@ def test_cli_reflectance_fail2(tmpdir):
          'tests/data/LC81390452014295LGN00_MTL.json',
          output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
+
+
+def test_cli_reflectance_multiband_stack(tmpdir):
+    output = str(tmpdir.join('toa_reflectance_multiband_stack.TIF'))
+    runner = CliRunner()
+    result = runner.invoke(reflectance,
+        ['tests/data/tiny_LC80460282016177LGN00_B2.TIF',
+         'tests/data/tiny_LC80460282016177LGN00_B3.TIF',
+         'tests/data/tiny_LC80460282016177LGN00_B4.TIF',
+         'tests/data/LC80460282016177LGN00_MTL.json',
+          output, '-t', '.*/tiny_LC8.*\_B{b}.TIF', '--dst-dtype', 'uint16'])
+    assert len(os.listdir(str(tmpdir))) == 1
+    assert result.exit_code == 0
+    with rasterio.open(output) as out:
+        assert out.count == 3
+        assert out.dtypes[0] == rasterio.uint16
 
 
 def test_cli_parsemtl_good(tmpdir):

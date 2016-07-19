@@ -1,7 +1,9 @@
 
 import logging
 
-import click, json, re
+import click
+import json
+import re
 from rasterio.rio.options import creation_options
 from rio_toa.radiance import calculate_landsat_radiance
 from rio_toa.reflectance import calculate_landsat_reflectance
@@ -16,20 +18,24 @@ def toa():
     """
     pass
 
+
 @click.command('radiance')
 @click.argument('src_path', type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
-@click.option('--dst-dtype', type=click.Choice(['float64']), default='float64')
-@click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF", help="File path template [default='.*/LC8.*\_B{b}.TIF']")
+@click.option('--dst-dtype', type=click.Choice(['float64']),
+              default='float64')
+@click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
+              help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0,
-    help="L8 Band that the src_path represents (Default is parsed from file name)")
+              help="L8 Band that the src_path represents"
+              "(Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
 @creation_options
 def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
-         verbose, creation_options, l8_bidx, dst_dtype, workers):
+             verbose, creation_options, l8_bidx, dst_dtype, workers):
     """Calculates Landsat8 Surface Radiance
     """
     if verbose:
@@ -40,37 +46,50 @@ def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
-    calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, l8_bidx, dst_dtype, workers)
+    calculate_landsat_radiance(src_path, src_mtl, dst_path,
+                               creation_options, l8_bidx,
+                               dst_dtype, workers)
+
 
 @click.command('reflectance')
-@click.argument('src_path', type=click.Path(exists=True))
+@click.argument('src_paths', nargs=-1, type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
-@click.option('--dst-dtype', type=click.Choice(['float32', 'float64', 'uint16', 'uint8']), default='float32')
-@click.option('--rescale-factor', '-r', type=click.Choice([55000.0/2**16, 1.0]), default=55000.0/2**16)
-@click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF", help="File path template [default='.*/LC8.*\_B{b}.TIF']")
+@click.option('--dst-dtype',
+              type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
+              default='float32')
+@click.option('--rescale-factor', '-r',
+              type=click.Choice([float(55000.0/2**16), float(1.0)]),
+              default=float(55000.0/2**16))
+@click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
+              help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0,
-    help="L8 Band that the src_path represents (Default is parsed from file name)")
+              help="L8 Band that the src_path represents"
+              "(Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
-@click.option('--pixel-sunangle', '-p', is_flag=True, default=False, help="per pixel sun elevation")
+@click.option('--pixel-sunangle', '-p', is_flag=True, default=False,
+              help="per pixel sun elevation")
 @click.pass_context
 @creation_options
-def reflectance(ctx, src_path, src_mtl, dst_path, dst_dtype, rescale_factor, readtemplate,
-         workers, l8_bidx, verbose, creation_options, pixel_sunangle):
+def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
+                rescale_factor, readtemplate, workers, l8_bidx,
+                verbose, creation_options, pixel_sunangle):
     """Calculates Landsat8 Surface Reflectance
     """
     if verbose:
         logger.setLevel(logging.DEBUG)
 
     if l8_bidx == 0:
-        l8_bidx = _parse_bands_from_filename([src_path], readtemplate)[0]
+        l8_bidx = _parse_bands_from_filename(list(src_paths), readtemplate)
     elif not isinstance(l8_bidx, int):
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
-    calculate_landsat_reflectance(src_path, src_mtl, dst_path,
-                                  rescale_factor, creation_options, l8_bidx, 
-                                  dst_dtype, workers, pixel_sunangle)
+    calculate_landsat_reflectance(list(src_paths), src_mtl, dst_path,
+                                  rescale_factor, creation_options,
+                                  list(l8_bidx), dst_dtype,
+                                  workers, pixel_sunangle)
+
 
 @click.command('parsemtl')
 @click.argument('mtl', default='-', required=False)

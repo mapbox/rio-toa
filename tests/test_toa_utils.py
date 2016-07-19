@@ -1,8 +1,9 @@
 import pytest
+import numpy as np
 
 from rio_toa.toa_utils import (
 	_parse_bands_from_filename,
-	_load_mtl_key, _load_mtl)
+	_load_mtl_key, _load_mtl, rescale)
 
 def test_parse_band_from_filename_default():
 	assert _parse_bands_from_filename(['data/LC81070352015122LGN00_B3.TIF'], '.*/LC8.*\_B{b}.TIF') == [3]
@@ -65,4 +66,27 @@ def test_load_mtl_key():
 	clouds = _load_mtl_key(mtl_test, keys2, band=None)
 	assert clouds == 19.74
 
+def test_rescale():
+	arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3,3))
+	dtype = np.__dict__['uint16']
+	rescale_factor = 1.0
+	rescaled_arr = rescale(arr, rescale_factor, dtype)
+	mask = (rescaled_arr != np.iinfo(np.uint16).max) & (rescaled_arr != 1.0)
+
+	assert np.all(rescaled_arr) <= np.iinfo(np.uint16).max
+	assert np.all(rescaled_arr) >= 0.0
+	assert np.array_equal(rescaled_arr[mask], arr[mask].astype(int))
+	assert rescaled_arr.dtype == 'uint16'
+
+def test_rescale2():
+	arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3,3))
+	dtype = np.__dict__['uint8']
+	rescale_factor = 1.0
+	rescaled_arr = rescale(arr, rescale_factor, dtype)
+	mask = (rescaled_arr != np.iinfo(dtype).max) & (rescaled_arr != 1.0)
+
+	assert np.all(rescaled_arr) <= np.iinfo(dtype).max
+	assert np.all(rescaled_arr) >= 0.0
+	assert np.array_equal(rescaled_arr[mask], arr[mask].astype(int))
+	assert rescaled_arr.dtype == 'uint8'
 

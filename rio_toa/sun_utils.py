@@ -53,7 +53,9 @@ def time_to_dec_hour(parsedtime):
 
 def calculate_declination(d):
     """
-    Calculate the declination of the sun in degrees based on a given day
+    Calculate the declination of the sun in radians based on a given day.
+    As reference +23.26 degrees at the northern summer solstice, -23.26
+    degrees at the southern summer solstice.
     See: https://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
     
 
@@ -68,7 +70,12 @@ def calculate_declination(d):
         the declination on day d
 
     """
-
+    # return - np.arcsin(0.39799 * np.cos(
+    #             np.deg2rad(0.98565) *
+    #             (d + 10) +
+    #             np.deg2rad(1.914) *
+    #             np.sin(np.deg2rad(0.98565) * (d - 2))))
+    # return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
     return np.arcsin(
         np.sin(np.deg2rad(23.45)) *
               np.sin(np.deg2rad(360. / 365.) *

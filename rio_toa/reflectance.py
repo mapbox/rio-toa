@@ -53,7 +53,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
+    rf = ((MR * img[:, :].astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
     rf[img == src_nodata] = 0.0
 
     return rf
@@ -66,36 +66,33 @@ def _reflectance_worker(open_files, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
-    data = riomucho.utils.array_stack(
-            [src.read(window=window).astype(np.float32)
-                for src in open_files])
+    data = np.swapaxes(riomucho.utils.array_stack([src.read(window=window).astype(np.float32)
+                                    for src in open_files]), 0, -1)
 
-    M_stack = np.ones(data.shape) * np.array(g_args['M'])[:, None, None]
-    A_stack = np.ones(data.shape) * np.array(g_args['A'])[:, None, None]
+    rows, cols, depth = data.shape
 
     if g_args['pixel_sunangle']:
-        bboxes = [BoundingBox(
+        bbox = BoundingBox(
                     *warp.transform_bounds(
                         g_args['src_crs'],
                         {'init': u'epsg:4326'},
-                        *open_files[i].window_bounds(window)))
-                  for i in range(data.shape[0])]
-        E_stack = riomucho.utils.array_stack(
-                    [sun_utils.sun_elevation(
+                        *open_files[0].window_bounds(window)))
+
+        E = sun_utils.sun_elevation(
                         bbox,
-                        data.shape[1:],
+                        (rows, cols),
                         g_args['date_collected'],
-                        g_args['time_collected_utc'])[np.newaxis, :]
-                     for bbox in bboxes])
+                        g_args['time_collected_utc'])
+
     else:
-        E_stack = np.ones(data.shape) * g_args['E']
+        E = [g_args['E'] for i in range(depth)]
 
     output = toa_utils.rescale(reflectance(
                     data,
-                    M_stack,
-                    A_stack,
-                    E_stack,
-                    g_args['src_nodata']),
+                    g_args['M'],
+                    g_args['A'],
+                    E,
+                    g_args['src_nodata']).reshape(depth, rows, cols),
                 g_args['rescale_factor'], g_args['dst_dtype'])
 
     return output
@@ -121,6 +118,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
             for b in bands]
     A = [mtl['L1_METADATA_FILE']['RADIOMETRIC_RESCALING']['REFLECTANCE_ADD_BAND_{}'.format(b)]
             for b in bands]
+
     E = mtl['L1_METADATA_FILE']['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
     date_collected = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED']
     time_collected_utc = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME']
@@ -153,6 +151,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
 
     dst_profile.update(count=len(bands))
     dst_profile.update(photometric='rgb')
+
     with riomucho.RioMucho(list(src_paths),
                            dst_path,
                            _reflectance_worker,

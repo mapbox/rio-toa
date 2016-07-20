@@ -5,7 +5,6 @@ from rio_toa import sun_utils, toa_utils
 from rasterio.coords import BoundingBox
 import datetime
 import numpy as np
-import pytest
 
 from rio_toa.sun_utils import (
     parse_utc_string, time_to_dec_hour, calculate_declination,

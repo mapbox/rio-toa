@@ -23,8 +23,12 @@ def toa():
 @click.argument('src_path', type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
-@click.option('--dst-dtype', type=click.Choice(['float64']),
-              default='float64')
+@click.option('--dst-dtype',
+              type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
+              default='float32')
+@click.option('--rescale-factor', '-r',
+              type=click.Choice([float(55000.0/2**16), float(1.0)]),
+              default=float(55000.0/2**16))
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
@@ -34,8 +38,9 @@ def toa():
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.pass_context
 @creation_options
-def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
-             verbose, creation_options, l8_bidx, dst_dtype, workers):
+def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
+             readtemplate, verbose, creation_options, l8_bidx,
+             dst_dtype, workers):
     """Calculates Landsat8 Surface Radiance
     """
     if verbose:
@@ -47,7 +52,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, readtemplate,
         raise ValueError("%s is not a valid integer" % l8_bidx)
 
     calculate_landsat_radiance(src_path, src_mtl, dst_path,
-                               creation_options, l8_bidx,
+                               rescale_factor, creation_options, l8_bidx,
                                dst_dtype, workers)
 
 

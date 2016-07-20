@@ -21,7 +21,7 @@ def test_cli_radiance_default(tmpdir):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        assert out.dtypes[0] == rasterio.float64
+        assert out.dtypes[0] == rasterio.float32
 
 def test_cli_radiance_good(tmpdir):
     output = str(tmpdir.join('toa_radiance.tif'))
@@ -34,7 +34,7 @@ def test_cli_radiance_good(tmpdir):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        assert out.dtypes[0] == rasterio.float64
+        assert out.dtypes[0] == rasterio.float32
 
 def test_cli_radiance_fail(tmpdir):
     output = str(tmpdir.join('toa_radiance.tif'))

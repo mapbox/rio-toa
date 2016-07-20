@@ -91,12 +91,12 @@ def _reflectance_worker(open_files, window, ij, g_args):
         E_stack = np.ones(data.shape) * g_args['E']
 
     output = toa_utils.rescale(reflectance(
-             data,
-             M_stack,
-             A_stack,
-             E_stack,
-             g_args['src_nodata']),
-             g_args['rescale_factor'], g_args['dst_dtype'])
+                    data,
+                    M_stack,
+                    A_stack,
+                    E_stack,
+                    g_args['src_nodata']),
+                g_args['rescale_factor'], g_args['dst_dtype'])
 
     return output
 

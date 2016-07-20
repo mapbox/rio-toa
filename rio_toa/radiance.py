@@ -11,7 +11,7 @@ def radiance(img, ML, AL, src_nodata=0):
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
     L = ML * Q + AL
-    where:              
+    where:
         L  = TOA spectral radiance (Watts/( m2 * srad * mm))
         ML = Band-specific multiplicative rescaling factor from the metadata
              (RADIANCE_MULT_BAND_x, where x is the band number)
@@ -35,7 +35,7 @@ def radiance(img, ML, AL, src_nodata=0):
         float64 ndarray with shape == input shape
     """
 
-    rs = ML * img.astype(np.float64) + AL
+    rs = ML * img.astype(np.float32) + AL
     rs[img == src_nodata] = 0.0
 
     return rs
@@ -47,15 +47,17 @@ def _radiance_worker(data, window, ij, g_args):
     TODO: integrate rescaling functionality for
     different output datatypes
     """
-    return radiance(
-        data[0],
-        g_args['M'],
-        g_args['A'],
-        g_args['src_nodata']
-    ).astype(g_args['dst_dtype'])
+    output = toa_utils.rescale(radiance(
+                    data[0],
+                    g_args['M'],
+                    g_args['A'],
+                    g_args['src_nodata']),
+                g_args['rescale_factor'], g_args['dst_dtype'])
+    return output
 
 
-def calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, band, dst_dtype, processes):
+def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
+                               creation_options, band, dst_dtype, processes):
     """
     Parameters
     ------------
@@ -68,11 +70,15 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, ba
     mtl = toa_utils._load_mtl(src_mtl)
 
     M = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'RADIANCE_MULT_BAND_'],
-        band)
+                                ['L1_METADATA_FILE',
+                                 'RADIOMETRIC_RESCALING',
+                                 'RADIANCE_MULT_BAND_'],
+                                band)
     A = toa_utils._load_mtl_key(mtl,
-        ['L1_METADATA_FILE', 'RADIOMETRIC_RESCALING', 'RADIANCE_ADD_BAND_'],
-        band)
+                                ['L1_METADATA_FILE',
+                                 'RADIOMETRIC_RESCALING',
+                                 'RADIANCE_ADD_BAND_'],
+                                band)
 
     dst_dtype = np.__dict__[dst_dtype]
 
@@ -90,11 +96,14 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, creation_options, ba
         'A': A,
         'M': M,
         'src_nodata': 0,
+        'rescale_factor': rescale_factor,
         'dst_dtype': dst_dtype
-    }
+        }
 
-    with riomucho.RioMucho([src_path], dst_path, _radiance_worker,
-        options=dst_profile,
-        global_args=global_args) as rm:
+    with riomucho.RioMucho([src_path],
+                           dst_path,
+                           _radiance_worker,
+                           options=dst_profile,
+                           global_args=global_args) as rm:
 
         rm.run(processes)

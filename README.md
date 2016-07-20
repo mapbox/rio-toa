@@ -19,12 +19,12 @@ The `radiance` module calculates surface radiance of Landsat 8 as outlined here:
 #### 1. `radiance`
 The `radiance.randiance` function accepts the following as inputs:  
 
-- numpy 1dD array  
+- numpy 2D array (single band)  
 - ML (multiplicative rescaling factor from scene mtl)  
 - AL (additive rescaling factor from scene mtl) and outputs a numpy array.  
 
 and outputs:
-- numpy 1dD array
+- numpy 2D array (single band)
 
 ```
 >>> from rio_toa import radiance

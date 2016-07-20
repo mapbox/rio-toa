@@ -1,12 +1,15 @@
-import json, re
+import json
+import re
 import numpy as np
+
 
 def _parse_bands_from_filename(filenames, template):
     tomatch = re.compile(template.replace('{b}', '([0-9]+?)'))
     bands = []
     for f in filenames:
         if not tomatch.match(f):
-            raise ValueError('%s is not a valid template for %s' % (template, ', '.join(filenames)))
+            raise ValueError('%s is not a valid template for %s'
+                             % (template, ', '.join(filenames)))
         bands.append(int(tomatch.findall(f)[0]))
 
     return bands
@@ -35,7 +38,7 @@ def _load_mtl_key(mtl, keys, band=None):
     """
     keys = list(keys)
 
-    if band != None and isinstance(band, int):
+    if band is not None and isinstance(band, int):
         keys[-1] = '%s%s' % (keys[-1], band)
 
     # for each key, the mtl is winnowed down by each key hash
@@ -105,10 +108,13 @@ def _parse_data(line):
     else:
         return _cast_to_best_type(kd)
 
+
 def _get_bounds_from_metadata(product_metadata):
     corners = ['LL', 'LR', 'UR', 'UL']
-    lats = [product_metadata["CORNER_{}_LAT_PRODUCT".format(i)] for i in corners]
-    lngs = [product_metadata["CORNER_{}_LON_PRODUCT".format(i)] for i in corners]
+    lats = [product_metadata["CORNER_{}_LAT_PRODUCT".format(i)]
+            for i in corners]
+    lngs = [product_metadata["CORNER_{}_LON_PRODUCT".format(i)]
+            for i in corners]
 
     return [min(lngs), min(lats), max(lngs), max(lats)]
 
@@ -123,4 +129,3 @@ def rescale(arr, rescale_factor, dtype):
     else:
         arr *= rescale_factor * np.iinfo(np.uint16).max
         return np.clip(arr, 1, np.iinfo(np.uint16).max).astype(dtype)
-

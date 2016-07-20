@@ -13,7 +13,7 @@ def parse_utc_string(collected_date, collected_time_utc):
     Parameters
     -----------
     collected_date_utc: str
-        Format: YYYY-MM-DD 
+        Format: YYYY-MM-DD
     collected_time: str
         Format: HH:MM:SS.SSSSSSSSZ
 
@@ -57,7 +57,6 @@ def calculate_declination(d):
     As reference +23.26 degrees at the northern summer solstice, -23.26
     degrees at the southern summer solstice.
     See: https://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
-    
 
     Parameters
     -----------
@@ -70,17 +69,11 @@ def calculate_declination(d):
         the declination on day d
 
     """
-    # return - np.arcsin(0.39799 * np.cos(
-    #             np.deg2rad(0.98565) *
-    #             (d + 10) +
-    #             np.deg2rad(1.914) *
-    #             np.sin(np.deg2rad(0.98565) * (d - 2))))
-    # return np.deg2rad(23.45)*np.sin(np.deg2rad(360)/365.0*(284+d))
     return np.arcsin(
-        np.sin(np.deg2rad(23.45)) *
-              np.sin(np.deg2rad(360. / 365.) *
-              (d - 81))
-    )
+                     np.sin(np.deg2rad(23.45)) *
+                     np.sin(np.deg2rad(360. / 365.) *
+                            (d - 81))
+                    )
 
 
 def solar_angle(day, utc_hour, longitude):
@@ -101,18 +94,17 @@ def solar_angle(day, utc_hour, longitude):
     --------
     solar angle in degrees for these longitudes
     """
-    
     localtime = (longitude / 180.0) * 12 + utc_hour
-    
+
     lstm = 15 * (localtime - utc_hour)
 
     B = np.deg2rad((360. / 365.) * (day - 81))
 
-    eot = (9.87 * 
+    eot = (9.87 *
            np.sin(2 * B) -
-          7.53 * np.cos(B) -
-          1.5 * np.sin(B))
-    
+           7.53 * np.cos(B) -
+           1.5 * np.sin(B))
+
     return 15 * (localtime +
                  (4 * (longitude - lstm) + eot) / 60.0 - 12)
 
@@ -151,6 +143,7 @@ def _calculate_sun_elevation(longitude, latitude, declination, day, utc_hour):
         np.cos(hour_angle)
     ))
 
+
 def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     """
     Given a raster's bounds + dimensions, calculate the
@@ -164,7 +157,7 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     shape: tuple
         tuple of (rows, cols) or (depth, rows, cols) for input raster
     collected_date_utc: str
-        Format: YYYY-MM-DD 
+        Format: YYYY-MM-DD
     collected_time: str
         Format: HH:MM:SS.SSSSSSSSZ
 
@@ -193,4 +186,6 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
 
     declination = calculate_declination(utc_time.timetuple().tm_yday)
 
-    return _calculate_sun_elevation(lng, lat, declination, utc_time.timetuple().tm_yday, decimal_hour)
+    return _calculate_sun_elevation(lng, lat, declination,
+                                    utc_time.timetuple().tm_yday,
+                                    decimal_hour)

@@ -38,7 +38,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     Parameters
     -----------
     img: ndarray
-        array of input pixels
+        array of input pixels of shape (rows, cols) or (rows, cols, depth)
 
     MR: float
         multiplicative rescaling factor from scene metadata
@@ -53,10 +53,18 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-    rf = ((MR * img[:, :].astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
+    input_shape = img.shape
+
+    if len(input_shape) > 2:
+        img = np.rollaxis(img, 0, len(input_shape))
+
+    rf = (
+        ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
+        )
+
     rf[img == src_nodata] = 0.0
 
-    return rf
+    return rf.reshape(input_shape)
 
 
 def _reflectance_worker(open_files, window, ij, g_args):
@@ -66,10 +74,10 @@ def _reflectance_worker(open_files, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
-    data = np.swapaxes(riomucho.utils.array_stack([src.read(window=window).astype(np.float32)
-                                    for src in open_files]), 0, -1)
+    data = riomucho.utils.array_stack([src.read(window=window).astype(np.float32)
+                                    for src in open_files])
 
-    rows, cols, depth = data.shape
+    depth, rows, cols = data.shape
 
     if g_args['pixel_sunangle']:
         bbox = BoundingBox(
@@ -82,7 +90,7 @@ def _reflectance_worker(open_files, window, ij, g_args):
                         bbox,
                         (rows, cols),
                         g_args['date_collected'],
-                        g_args['time_collected_utc'])
+                        g_args['time_collected_utc']).reshape(rows, cols, 1)
 
     else:
         E = [g_args['E'] for i in range(depth)]
@@ -92,7 +100,7 @@ def _reflectance_worker(open_files, window, ij, g_args):
                     g_args['M'],
                     g_args['A'],
                     E,
-                    g_args['src_nodata']).reshape(depth, rows, cols),
+                    g_args['src_nodata']),
                 g_args['rescale_factor'], g_args['dst_dtype'])
 
     return output

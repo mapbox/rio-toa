@@ -40,11 +40,11 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     img: ndarray
         array of input pixels of shape (rows, cols) or (rows, cols, depth)
 
-    MR: float
+    MR: float or list of floats
         multiplicative rescaling factor from scene metadata
-    AR: float
+    AR: float or list of floats
         additive rescaling factor from scene metadata
-    E: float
+    E: float or numpy array of floats
         local sun elevation angle in degrees
 
     Returns
@@ -53,12 +53,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-
-    if type(E) == float and E <0:
-        raise ValueError("Sun Elevation Must Be Nonnegative")
-    elif type(E) == list and len([e for e in E if e < 0]):
-        raise ValueError("Sun Elevation Must Be Nonnegative")
-    elif type(E) == 'numpy.ndarray' and np.any(E < 0.0):
+    if np.any(E < 0.0):
         raise ValueError("Sun Elevation Must Be Nonnegative")
 
     input_shape = img.shape
@@ -107,7 +102,7 @@ def _reflectance_worker(open_files, window, ij, g_args):
                         g_args['time_collected_utc']).reshape(rows, cols, 1)
 
     else:
-        E = [g_args['E'] for i in range(depth)]
+        E = np.array([g_args['E'] for i in range(depth)])
 
     output = toa_utils.rescale(reflectance(
                     data,

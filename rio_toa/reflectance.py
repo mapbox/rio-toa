@@ -56,15 +56,21 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     input_shape = img.shape
 
     if len(input_shape) > 2:
+
         img = np.rollaxis(img, 0, len(input_shape))
 
-    rf = (
-        ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
-        )
-
+    rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
     rf[img == src_nodata] = 0.0
 
-    return rf.reshape(input_shape)
+    if len(input_shape) > 2:
+        if np.rollaxis(rf, len(input_shape) - 1, 0).shape != input_shape:
+            raise ValueError(
+                "Output shape %s is not equal to input shape %s"
+                %(rf.shape, input_shape))
+        else:
+            return np.rollaxis(rf, len(input_shape) - 1, 0)
+    else:
+        return rf
 
 
 def _reflectance_worker(open_files, window, ij, g_args):

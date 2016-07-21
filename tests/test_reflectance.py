@@ -50,34 +50,51 @@ def test_reflectance_wrong_shape():
 
 @pytest.fixture
 def test_var():
-    src_path = 'tests/data/tiny_LC81390452014295LGN00_B5.TIF'
-    src_mtl = 'tests/data/LC81390452014295LGN00_MTL.json'
-    dst_path = 'tests/data/tiny_LC81390452014295LGN00_B5_refl.TIF'
+    src_path_b = 'tests/data/tiny_LC80460282016177LGN00_B2.TIF'
+    src_path_g = 'tests/data/tiny_LC80460282016177LGN00_B3.TIF'
+    src_path_r = 'tests/data/tiny_LC80460282016177LGN00_B4.TIF'
+    src_mtl = 'tests/data/LC80460282016177LGN00_MTL.json'
+    dst_path_single = 'tests/data/tiny_LC80460282016177LGN00_B2_refl.TIF'
+    dst_path_stack = 'tests/data/tiny_LC80460282016177LGN00_rgb_refl.TIF'
 
-    return src_path, src_mtl, dst_path
+    return src_path_b, src_path_g, src_path_r, \
+        src_mtl, dst_path_single, dst_path_stack
 
 
 @pytest.fixture
 def test_data(test_var):
-    src_path, src_mtl, dst_path = test_var
+    src_path_b, src_path_g, src_path_r, \
+        src_mtl, dst_path_single, dst_path_stack = test_var
 
-    with rio.open(src_path, 'r') as src:
-        tif = src.read(1)
+    with rio.open(src_path_b, 'r') as src:
+        tif_b = src.read(1)
         tif_meta = src.meta
         tif_shape = src.shape
 
-    with rio.open(dst_path, 'r') as src:
-        tif_output = src.read(1)
-        tif_output_meta = src.meta
+    with rio.open(src_path_g, 'r') as src:
+        tif_g = src.read(1)
+
+    with rio.open(src_path_r, 'r') as src:
+        tif_r = src.read(1)
+
+    with rio.open(dst_path_single, 'r') as src:
+        tif_output_single = src.read(1)
+        tif_output_single_meta = src.meta
+
+    with rio.open(dst_path_stack, 'r') as src:
+        tif_output_stack = src.read(1)
+        tif_output_stack_meta = src.meta
 
     with open(src_mtl, 'r') as src:
         mtl = json.loads(src.read())
 
-    return tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl
+    return tif_b, tif_g, tif_r, tif_meta, tif_shape, \
+        tif_output_single, tif_output_single_meta, \
+        tif_output_stack, tif_output_stack_meta, mtl
 
 
 def test_calculate_reflectance(test_data):
-    tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
+    tif_b, tif_output_single, mtl = test_data[0], test_data[5], test_data[-1]
 
     M = toa_utils._load_mtl_key(mtl,
                                 ['L1_METADATA_FILE',
@@ -96,17 +113,15 @@ def test_calculate_reflectance(test_data):
 
     assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
     assert isinstance(M, float)
-    toa = reflectance.reflectance(tif, M, A, E)
+    toa = reflectance.reflectance(tif_b, M, A, E)
     toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.float32)
     assert toa_rescaled.dtype == np.float32
-    assert np.min(tif_output) == np.min(toa_rescaled)
-    assert int(np.max(tif_output)) == int(np.max(toa_rescaled))
-
-
+    assert np.min(tif_output_single) == np.min(toa_rescaled)
+    assert int(np.max(tif_output_single)) == int(np.max(toa_rescaled))
 
 
 def test_calculate_reflectance2(test_data):
-    tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
+    tif_b, tif_shape, mtl = test_data[0], test_data[4], test_data[-1]
 
     M = toa_utils._load_mtl_key(mtl,
                                 ['L1_METADATA_FILE',
@@ -132,14 +147,14 @@ def test_calculate_reflectance2(test_data):
                                 tif_shape,
                                 date_collected,
                                 time_collected_utc)
-    toa = reflectance.reflectance(tif, M, A, E)
+    toa = reflectance.reflectance(tif_b, M, A, E)
     assert toa.dtype == np.float32
     assert np.all(toa) < 1.5
     assert np.all(toa) >= 0.0
 
 
 def test_calculate_landsat_reflectance(test_var, capfd):
-    src_path, src_mtl = test_var[:2]
+    src_path, src_mtl = test_var[0], test_var[3]
     dst_path = '/tmp/ref1.TIF'
     rescale_factor = 1.0
     creation_options = {}
@@ -148,14 +163,15 @@ def test_calculate_landsat_reflectance(test_var, capfd):
     processes = 1
     pixel_sunangle = False
     reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path,
-                                rescale_factor, creation_options, [band],
-                                dst_dtype, processes, pixel_sunangle)
+                                              rescale_factor, creation_options,
+                                              [band], dst_dtype, processes,
+                                              pixel_sunangle)
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
 
 
-def test_calculate_landsat_reflectance_pixel(test_var, capfd):
-    src_path, src_mtl = test_var[:2]
+def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
+    src_path, src_mtl = test_var[0], test_var[3]
     dst_path = '/tmp/ref1.TIF'
     rescale_factor = 1.0
     creation_options = {}
@@ -165,8 +181,30 @@ def test_calculate_landsat_reflectance_pixel(test_var, capfd):
     pixel_sunangle = True
 
     reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path,
-                                rescale_factor, creation_options, [band],
-                                dst_dtype, processes, pixel_sunangle)
+                                              rescale_factor, creation_options,
+                                              [band], dst_dtype, processes,
+                                              pixel_sunangle)
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
 
+
+def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
+    src_path, src_mtl, tif_output_stack = \
+        test_var[:3], test_var[3], test_data[-3]
+    dst_path = '/tmp/ref2.TIF'
+    rescale_factor = float(55000.0/2**16)
+    creation_options = {}
+    dst_dtype = 'uint16'
+    processes = 1
+    pixel_sunangle = True
+
+    reflectance.calculate_landsat_reflectance(list(src_path), src_mtl,
+                                              dst_path, rescale_factor,
+                                              creation_options, [4, 3, 2],
+                                              dst_dtype, processes,
+                                              pixel_sunangle)
+    out, err = capfd.readouterr()
+    assert os.path.exists(dst_path)
+    with rio.open(dst_path, 'r') as dst:
+        output = dst.read()
+    assert np.max(output) == np.max(tif_output_stack)

@@ -1,6 +1,11 @@
 # rio-toa
 Top Of Atmosphere (TOA) calculations for Landsat 8
 
+## Before/After
+[Greenland]
+[Portland]
+[Low Sun Angle]
+
 ## Install
 
 We highly recommend installing in a virtualenv. Once activated,

@@ -1,19 +1,18 @@
 # rio-toa
+[![Build Status](https://travis-ci.org/mapbox/rio-toa.svg?branch=master)](https://travis-ci.org/mapbox/rio-toa)
+[![Coverage Status](https://coveralls.io/github/mapbox/rio-toa?branch=the-sunangle-also-rises)](https://coveralls.io/github/mapbox/rio-toa?branch=the-sunangle-also-rises)
+
 Top Of Atmosphere (TOA) calculations for Landsat 8
 
 ## Before/After
 ##### Greenland
-###### Pre-TOA
-###### Post-TOA
+![toa_greenland_gif](demo_img/toa_greenland.gif)
+###### Pre-TOA vs Post-TOA Histograms
+![greenland_hist](demo_img/greenland_hist.png)
 ##### Portland
-###### Pre-TOA
-![lc80460282016177lgn00_rgb_color_tiny](https://cloud.githubusercontent.com/assets/4450007/17033217/db82807c-4f31-11e6-9509-e88a680c284c.png)
-
-###### Post-TOA
-![test_toa_color_tiny](https://cloud.githubusercontent.com/assets/4450007/17033150/91176f3e-4f31-11e6-89be-95ee018bbcec.png)
-
-
-[Low Sun Angle]
+![toa_portland_gif](demo_img/toa_portland.gif)
+###### Pre-TOA vs Post-TOA Histograms
+![portland_hist](demo_img/portland_hist.png)
 
 ## Install
 

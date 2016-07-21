@@ -54,7 +54,11 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
     """
 
-    if np.any(E < 0):
+    if type(E) == float and E <0:
+        raise ValueError("Sun Elevation Must Be Nonnegative")
+    elif type(E) == list and len([e for e in E if e < 0]):
+        raise ValueError("Sun Elevation Must Be Nonnegative")
+    elif type(E) == 'numpy.ndarray' and np.any(E < 0.0):
         raise ValueError("Sun Elevation Must Be Nonnegative")
 
     input_shape = img.shape

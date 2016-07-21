@@ -53,6 +53,10 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
+
+    if np.any(E < 0):
+        raise ValueError("Sun Elevation Must Be Nonnegative")
+
     input_shape = img.shape
 
     if len(input_shape) > 2:

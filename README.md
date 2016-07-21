@@ -2,8 +2,17 @@
 Top Of Atmosphere (TOA) calculations for Landsat 8
 
 ## Before/After
-[Greenland]
-[Portland]
+##### Greenland
+###### Pre-TOA
+###### Post-TOA
+##### Portland
+###### Pre-TOA
+![lc80460282016177lgn00_rgb_color_tiny](https://cloud.githubusercontent.com/assets/4450007/17033217/db82807c-4f31-11e6-9509-e88a680c284c.png)
+
+###### Post-TOA
+![test_toa_color_tiny](https://cloud.githubusercontent.com/assets/4450007/17033150/91176f3e-4f31-11e6-89be-95ee018bbcec.png)
+
+
 [Low Sun Angle]
 
 ## Install

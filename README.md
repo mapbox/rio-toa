@@ -6,13 +6,13 @@ Top Of Atmosphere (TOA) calculations for Landsat 8
 
 ## Before/After
 ##### Greenland
-![toa_greenland_gif](demo_img/toa_greenland.gif)
+![toa_greenland_gif](demo_img/toa_greenland_no_color.gif)
 ###### Pre-TOA vs Post-TOA Histograms
-![greenland_hist](demo_img/greenland_hist.png)
+![greenland_hist](demo_img/greenland_no_color_hist.png)
 ##### Portland
-![toa_portland_gif](demo_img/toa_portland.gif)
+![toa_portland_gif](demo_img/toa_portland_same_color.gif)
 ###### Pre-TOA vs Post-TOA Histograms
-![portland_hist](demo_img/portland_hist.png)
+![portland_hist](demo_img/portland_same_color_hist.png)
 
 ## Install
 

@@ -3,6 +3,7 @@ import os
 from click.testing import CliRunner
 import logging
 import pytest
+from click import UsageError
 import rasterio
 import json
 
@@ -48,11 +49,12 @@ def test_cli_radiance_fail(tmpdir):
 def test_cli_radiance_l8_bidx_fail(tmpdir):
     output = str(tmpdir.join('toa_radiance_l8_bidx.tif'))
     runner = CliRunner()
-    result = runner.invoke(radiance, 
-        ['tests/data/LC81060712016134LGN00_B3.TIF',
-         'tests/data/LC81060712016134LGN00_MTL.json',
-         output, 'l8_bidx', '3.0'])
-    assert result.exit_code != 0
+    with pytest.raises(UsageError) as exc:
+      runner.invoke(radiance,
+          ['tests/data/LC81060712016134LGN00_B3.TIF',
+           'tests/data/LC81060712016134LGN00_MTL.json',
+           output, 'l8_bidx', '3.0'])
+    assert 'is not a valid integer' in str(exc.value)
 
 
 def test_cli_reflectance_default(tmpdir):
@@ -89,7 +91,7 @@ def test_cli_reflectance_l8_bidx(tmpdir):
          output, '--l8-bidx', 'notint'])
     assert result.exit_code != 0
     assert 'Error: Invalid value for "--l8-bidx":' \
-           ' notint is not a valid integer\n' in result.output 
+           ' notint is not a valid integer\n' in result.output
 
 def test_cli_reflectance_fail(tmpdir):
     output = str(tmpdir.join('toa_reflectance_readtemplate.TIF'))

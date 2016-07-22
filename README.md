@@ -1,6 +1,6 @@
 # rio-toa
 [![Build Status](https://travis-ci.org/mapbox/rio-toa.svg?branch=master)](https://travis-ci.org/mapbox/rio-toa)
-[![Coverage Status](https://coveralls.io/github/mapbox/rio-toa?branch=the-sunangle-also-rises)](https://coveralls.io/github/mapbox/rio-toa?branch=the-sunangle-also-rises)
+[![Coverage Status](https://coveralls.io/repos/github/mapbox/rio-toa/badge.svg?branch=the-sunangle-also-rises)](https://coveralls.io/github/mapbox/rio-toa?branch=the-sunangle-also-rises)
 
 Top Of Atmosphere (TOA) calculations for Landsat 8
 

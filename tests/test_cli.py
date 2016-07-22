@@ -45,6 +45,15 @@ def test_cli_radiance_fail(tmpdir):
          output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
 
+def test_cli_radiance_l8_bidx_fail(tmpdir):
+    output = str(tmpdir.join('toa_radiance_l8_bidx.tif'))
+    runner = CliRunner()
+    result = runner.invoke(radiance, 
+        ['tests/data/LC81060712016134LGN00_B3.TIF',
+         'tests/data/LC81060712016134LGN00_MTL.json',
+         output, 'l8_bidx', '3.0'])
+    assert result.exit_code != 0
+
 
 def test_cli_reflectance_default(tmpdir):
     output = str(tmpdir.join('toa_reflectance.tif'))

@@ -27,8 +27,9 @@ def toa():
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
               default='float32')
 @click.option('--rescale-factor', '-r',
-              type=click.Choice([float(55000.0/2**16), float(1.0)]),
-              default=float(55000.0/2**16))
+              type=float,
+              default=float(55000.0/2**16),
+              help='rescale post-TOA tifs to 55,000 or to full 16-bit')
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
@@ -64,8 +65,9 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
               default='float32')
 @click.option('--rescale-factor', '-r',
-              type=click.Choice([float(55000.0/2**16), float(1.0)]),
-              default=float(55000.0/2**16))
+              type=float,
+              default=float(55000.0/2**16),
+              help='rescale post-TOA tifs to 55,000 or to full 16-bit')
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)

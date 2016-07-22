@@ -1,3 +1,4 @@
+
 import logging
 
 import click
@@ -32,7 +33,7 @@ def toa():
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
-@click.option('--l8-bidx', default=0,
+@click.option('--l8-bidx', default=0, type=int,
               help="L8 Band that the src_path represents"
               "(Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
@@ -48,8 +49,6 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 
     if l8_bidx == 0:
         l8_bidx = _parse_bands_from_filename([src_path], readtemplate)[0]
-    elif not isinstance(l8_bidx, int):
-        raise click.UsageError("%s is not a valid integer" % l8_bidx)
 
     calculate_landsat_radiance(src_path, src_mtl, dst_path,
                                rescale_factor, creation_options, l8_bidx,
@@ -70,7 +69,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [default='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
-@click.option('--l8-bidx', default=0,
+@click.option('--l8-bidx', default=0, type=int,
               help="L8 Band that the src_path represents"
               "(Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
@@ -88,8 +87,6 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
 
     if l8_bidx == 0:
         l8_bidx = _parse_bands_from_filename(list(src_paths), readtemplate)
-    elif not isinstance(l8_bidx, int):
-        raise click.UsageError("%s is not a valid integer" % l8_bidx)
 
     calculate_landsat_reflectance(list(src_paths), src_mtl, dst_path,
                                   rescale_factor, creation_options,

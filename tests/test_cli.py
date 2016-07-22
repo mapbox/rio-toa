@@ -46,16 +46,6 @@ def test_cli_radiance_fail(tmpdir):
          output, '.*/Fail_LC8.*\_B{b}.TIF'])
     assert result.exit_code != 0
 
-def test_cli_radiance_l8_bidx_fail(tmpdir):
-    output = str(tmpdir.join('toa_radiance_l8_bidx.tif'))
-    runner = CliRunner()
-    with pytest.raises(UsageError) as exc:
-      runner.invoke(radiance,
-          ['tests/data/LC81060712016134LGN00_B3.TIF',
-           'tests/data/LC81060712016134LGN00_MTL.json',
-           output, 'l8_bidx', '3.0'])
-    assert 'is not a valid integer' in str(exc.value)
-
 
 def test_cli_reflectance_default(tmpdir):
     output = str(tmpdir.join('toa_reflectance.tif'))
@@ -82,6 +72,7 @@ def test_cli_reflectance_good(tmpdir):
         assert out.count == 1
         assert out.dtypes[0] == rasterio.float32
 
+
 def test_cli_reflectance_l8_bidx(tmpdir):
     output = str(tmpdir.join('toa_reflectance.tif'))
     runner = CliRunner()
@@ -92,6 +83,7 @@ def test_cli_reflectance_l8_bidx(tmpdir):
     assert result.exit_code != 0
     assert 'Error: Invalid value for "--l8-bidx":' \
            ' notint is not a valid integer\n' in result.output
+
 
 def test_cli_reflectance_fail(tmpdir):
     output = str(tmpdir.join('toa_reflectance_readtemplate.TIF'))

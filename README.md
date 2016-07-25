@@ -21,7 +21,11 @@ Top Of Atmosphere (TOA) calculations for Landsat 8
 ## Install
 
 We highly recommend installing in a virtualenv. Once activated,
-install from source
+```
+pip install -U pip
+pip install rio-toa
+```
+Or install from source
 ```
 git checkout https://github.com/mapbox/rio-toa.git
 cd rio-toa

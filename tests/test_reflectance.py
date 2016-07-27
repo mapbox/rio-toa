@@ -184,7 +184,8 @@ def test_calculate_landsat_reflectance(test_var, capfd):
 
 def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
     src_path, src_mtl = test_var[0], test_var[3]
-    dst_path = '/tmp/ref1.TIF'
+    dst_path = '/tmp/ref1.tif'
+    expected_path = 'tests/expected/ref1.tif'
     rescale_factor = 1.0
     creation_options = {}
     band = 5
@@ -197,13 +198,17 @@ def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
                                               [band], dst_dtype, processes,
                                               pixel_sunangle)
     out, err = capfd.readouterr()
-    assert os.path.exists(dst_path)
+    
+    with rio.open(dst_path) as created:
+        with rio.open(expected_path) as expected:
+            assert np.array_equal(created.read(), expected.read())
 
 
 def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
     src_path, src_mtl, tif_output_stack = \
         test_var[:3], test_var[3], test_data[-3]
-    dst_path = '/tmp/ref2.TIF'
+    dst_path = '/tmp/ref2.tif'
+    expected_path = 'tests/expected/ref2.tif'
     rescale_factor = float(55000.0/2**16)
     creation_options = {}
     dst_dtype = 'uint16'
@@ -217,6 +222,7 @@ def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
                                               pixel_sunangle)
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
-    with rio.open(dst_path, 'r') as dst:
-        output = dst.read()
-    assert np.max(output) == np.max(tif_output_stack)
+
+    with rio.open(dst_path) as created:
+        with rio.open(expected_path) as expected:
+            assert np.array_equal(created.read(), expected.read())

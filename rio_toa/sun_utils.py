@@ -24,7 +24,8 @@ def parse_utc_string(collected_date, collected_time_utc):
     """
     utcstr = collected_date + ' ' + collected_time_utc
 
-    if not re.match(r'[0-9]{4}\-[0-9]{2}\-[0-9]{2}\ [0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]+Z', utcstr):
+    if not re.match(r'\d{4}\-\d{2}\-\d{2}\ \d{2}\:\d{2}\:\d{2}\.\d+Z',
+                    utcstr):
         raise ValueError("%s is an invalid utc time" % utcstr)
 
     return datetime.datetime.strptime(
@@ -144,6 +145,16 @@ def _calculate_sun_elevation(longitude, latitude, declination, day, utc_hour):
     ))
 
 
+def _make_lat_lng_array(shape, resolution, lower_left):
+    xCell, yCell = resolution
+    left, bottom = lower_left
+
+    lat, lng = np.indices(shape)
+
+    return ((lng.astype(np.float32) * xCell) + left + (xCell / 2.0),
+            (lat.astype(np.float32) * yCell) + bottom + (yCell / 2.0))
+
+
 def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     """
     Given a raster's bounds + dimensions, calculate the
@@ -177,10 +188,9 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     xCell = (bounds.right - bounds.left) / float(cols)
     yCell = (bounds.top - bounds.bottom) / float(rows)
 
-    lat, lng = np.indices((rows, cols))
-
-    lng = (lng.astype(np.float32) * xCell) + bounds.left + (xCell / 2.0)
-    lat = (lat.astype(np.float32) * yCell) + bounds.bottom + (yCell / 2.0)
+    lng, lat = _make_lat_lng_array((rows, cols),
+                                   (xCell, yCell),
+                                   (bounds.left, bounds.bottom))
 
     decimal_hour = time_to_dec_hour(utc_time)
 

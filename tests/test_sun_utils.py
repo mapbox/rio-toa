@@ -8,7 +8,7 @@ import numpy as np
 
 from rio_toa.sun_utils import (
     parse_utc_string, time_to_dec_hour, calculate_declination,
-    solar_angle, sun_elevation)
+    solar_angle, sun_elevation, _make_lat_lng_array)
 
 
 def test_parse_utc_string():
@@ -36,6 +36,11 @@ def test_data():
     mtl4 = toa_utils._load_mtl('tests/data/LC80100202015018LGN00_MTL.json')
 
     return mtl1, mtl2, mtl3, mtl4
+
+def test_make_lat_lngs():
+    lngs, lats = _make_lat_lng_array((5, 5), (1, 1), (-120., 38.))
+    assert lats[0, 0] > lats[-1, 0]
+    assert lngs[0, -1] > lngs[0, 0]
 
 
 def test_sun_angle(test_data):

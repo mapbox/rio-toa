@@ -167,10 +167,10 @@ def _create_lnglats(shape, bbox):
     xCell = (e - w) / float(cols)
     yCell = (n - s) / float(rows)
 
-    lat, lng = np.indices(shape)
+    lat, lng = np.indices(shape, dtype=np.float32)
 
-    return ((lng.astype(np.float32) * xCell) + w + (xCell / 2.0),
-            (lat.astype(np.float32) * yCell) + s + (yCell / 2.0))
+    return ((lng * xCell) + w + (xCell / 2.0),
+            (np.flipud(lat) * yCell) + s + (yCell / 2.0))
 
 
 def sun_elevation(bounds, shape, date_collected, time_collected_utc):

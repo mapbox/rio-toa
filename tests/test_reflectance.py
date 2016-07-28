@@ -9,6 +9,9 @@ from rasterio.coords import BoundingBox
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
 
+def flex_compare(r1, r2, thresh=1):
+    return not np.any(np.abs(r1.astype(np.float64) - r2.astype(np.float64)) > thresh)
+
 
 def test_reflectance():
     band = np.array([[0, 0, 0],
@@ -189,7 +192,7 @@ def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
     rescale_factor = 1.0
     creation_options = {}
     band = 5
-    dst_dtype = 'float32'
+    dst_dtype = 'uint16'
     processes = 1
     pixel_sunangle = True
 
@@ -201,7 +204,7 @@ def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
     
     with rio.open(dst_path) as created:
         with rio.open(expected_path) as expected:
-            assert np.array_equal(created.read(), expected.read())
+            assert flex_compare(created.read(), expected.read())
 
 
 def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
@@ -220,9 +223,10 @@ def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
                                               creation_options, [4, 3, 2],
                                               dst_dtype, processes,
                                               pixel_sunangle)
+
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
 
     with rio.open(dst_path) as created:
         with rio.open(expected_path) as expected:
-            assert np.array_equal(created.read(), expected.read())
+            assert flex_compare(created.read(), expected.read())

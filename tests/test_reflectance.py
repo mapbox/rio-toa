@@ -10,10 +10,11 @@ from rasterio.coords import BoundingBox
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
 
-def flex_compare(r1, r2, thresh=5):
-    tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64)) > thresh
-    click.echo('{} values exceed the threshold difference'.format(np.sum(tdiff)), err=True)
-    return not np.any(tdiff)
+def flex_compare(r1, r2, thresh=10):
+    tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64))
+    click.echo('{0} values exceed the threshold difference with a max variance of {1}'.format(
+        np.sum(tdiff > thresh), tdiff.max()), err=True)
+    return not np.any(tdiff > thresh)
 
 
 def test_reflectance():

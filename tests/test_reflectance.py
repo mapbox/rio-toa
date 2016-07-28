@@ -6,11 +6,20 @@ import rasterio as rio
 import riomucho
 import pytest
 from rasterio.coords import BoundingBox
+from raster_tester.compare import affaux, upsample_array
+
+
 
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
 
 def flex_compare(r1, r2, thresh=10):
+    upsample = 4
+    r1 = r1[::upsample]
+    r2 = r2[::upsample]
+    toAff, frAff = affaux(upsample)
+    r1 = upsample_array(r1, upsample, frAff, toAff)
+    r2 = upsample_array(r2, upsample, frAff, toAff)
     tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64))
     click.echo('{0} values exceed the threshold difference with a max variance of {1}'.format(
         np.sum(tdiff > thresh), tdiff.max()), err=True)

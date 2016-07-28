@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import click
 import rasterio as rio
 import riomucho
 import pytest
@@ -9,8 +10,10 @@ from rasterio.coords import BoundingBox
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
 
-def flex_compare(r1, r2, thresh=1):
-    return not np.any(np.abs(r1.astype(np.float64) - r2.astype(np.float64)) > thresh)
+def flex_compare(r1, r2, thresh=5):
+    tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64)) > thresh
+    click.echo('{} values exceed the threshold difference'.format(np.sum(tdiff)), err=True)
+    return not np.any(tdiff)
 
 
 def test_reflectance():

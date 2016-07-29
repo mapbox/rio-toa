@@ -24,7 +24,8 @@ def parse_utc_string(collected_date, collected_time_utc):
     """
     utcstr = collected_date + ' ' + collected_time_utc
 
-    if not re.match(r'[0-9]{4}\-[0-9]{2}\-[0-9]{2}\ [0-9]{2}\:[0-9]{2}\:[0-9]{2}\.[0-9]+Z', utcstr):
+    if not re.match(r'\d{4}\-\d{2}\-\d{2}\ \d{2}\:\d{2}\:\d{2}\.\d+Z',
+                    utcstr):
         raise ValueError("%s is an invalid utc time" % utcstr)
 
     return datetime.datetime.strptime(
@@ -144,6 +145,34 @@ def _calculate_sun_elevation(longitude, latitude, declination, day, utc_hour):
     ))
 
 
+def _create_lnglats(shape, bbox):
+    """
+    Creates a (lng, lat) array tuple with cells that respectively
+    represent a longitude and a latitude at that location
+
+    Parameters
+    -----------
+    shape: tuple
+        the shape of the arrays to create
+    bbox: tuple or list
+        the bounds of the arrays to create in [w, s, e, n]
+
+    Returns
+    --------
+    (lngs, lats): tuple of (rows, cols) shape ndarrays
+    """
+
+    rows, cols = shape
+    w, s, e, n = bbox
+    xCell = (e - w) / float(cols)
+    yCell = (n - s) / float(rows)
+
+    lat, lng = np.indices(shape, dtype=np.float32)
+
+    return ((lng * xCell) + w + (xCell / 2.0),
+            (np.flipud(lat) * yCell) + s + (yCell / 2.0))
+
+
 def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     """
     Given a raster's bounds + dimensions, calculate the
@@ -174,13 +203,8 @@ def sun_elevation(bounds, shape, date_collected, time_collected_utc):
     else:
         rows, cols = shape
 
-    xCell = (bounds.right - bounds.left) / float(cols)
-    yCell = (bounds.top - bounds.bottom) / float(rows)
-
-    lat, lng = np.indices((rows, cols))
-
-    lng = (lng.astype(np.float32) * xCell) + bounds.left + (xCell / 2.0)
-    lat = (lat.astype(np.float32) * yCell) + bounds.bottom + (yCell / 2.0)
+    lng, lat = _create_lnglats((rows, cols),
+                               list(bounds))
 
     decimal_hour = time_to_dec_hour(utc_time)
 

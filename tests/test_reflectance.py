@@ -1,13 +1,29 @@
 import os
 import json
 import numpy as np
+import click
 import rasterio as rio
 import riomucho
 import pytest
 from rasterio.coords import BoundingBox
+from raster_tester.compare import affaux, upsample_array
+
+
 
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
+
+def flex_compare(r1, r2, thresh=10):
+    upsample = 4
+    r1 = r1[::upsample]
+    r2 = r2[::upsample]
+    toAff, frAff = affaux(upsample)
+    r1 = upsample_array(r1, upsample, frAff, toAff)
+    r2 = upsample_array(r2, upsample, frAff, toAff)
+    tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64))
+    click.echo('{0} values exceed the threshold difference with a max variance of {1}'.format(
+        np.sum(tdiff > thresh), tdiff.max()), err=True)
+    return not np.any(tdiff > thresh)
 
 
 def test_reflectance():
@@ -184,11 +200,12 @@ def test_calculate_landsat_reflectance(test_var, capfd):
 
 def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
     src_path, src_mtl = test_var[0], test_var[3]
-    dst_path = '/tmp/ref1.TIF'
+    dst_path = '/tmp/ref1.tif'
+    expected_path = 'tests/expected/ref1.tif'
     rescale_factor = 1.0
     creation_options = {}
     band = 5
-    dst_dtype = 'float32'
+    dst_dtype = 'uint16'
     processes = 1
     pixel_sunangle = True
 
@@ -197,13 +214,17 @@ def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
                                               [band], dst_dtype, processes,
                                               pixel_sunangle)
     out, err = capfd.readouterr()
-    assert os.path.exists(dst_path)
+    
+    with rio.open(dst_path) as created:
+        with rio.open(expected_path) as expected:
+            assert flex_compare(created.read(), expected.read())
 
 
 def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
     src_path, src_mtl, tif_output_stack = \
         test_var[:3], test_var[3], test_data[-3]
-    dst_path = '/tmp/ref2.TIF'
+    dst_path = '/tmp/ref2.tif'
+    expected_path = 'tests/expected/ref2.tif'
     rescale_factor = float(55000.0/2**16)
     creation_options = {}
     dst_dtype = 'uint16'
@@ -215,8 +236,10 @@ def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
                                               creation_options, [4, 3, 2],
                                               dst_dtype, processes,
                                               pixel_sunangle)
+
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)
-    with rio.open(dst_path, 'r') as dst:
-        output = dst.read()
-    assert np.max(output) == np.max(tif_output_stack)
+
+    with rio.open(dst_path) as created:
+        with rio.open(expected_path) as expected:
+            assert flex_compare(created.read(), expected.read())

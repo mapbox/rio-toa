@@ -8,7 +8,7 @@ import numpy as np
 
 from rio_toa.sun_utils import (
     parse_utc_string, time_to_dec_hour, calculate_declination,
-    solar_angle, sun_elevation)
+    solar_angle, sun_elevation, _create_lnglats)
 
 
 def test_parse_utc_string():
@@ -36,6 +36,16 @@ def test_data():
     mtl4 = toa_utils._load_mtl('tests/data/LC80100202015018LGN00_MTL.json')
 
     return mtl1, mtl2, mtl3, mtl4
+
+def test_make_lat_lngs_n():
+    lngs, lats = _create_lnglats((5, 5), [-120., 37., -119., 38.])
+    assert lats[0, 0] > lats[-1, 0]
+    assert lngs[0, -1] > lngs[0, 0]
+
+def test_make_lat_lngs_s():
+    lngs, lats = _create_lnglats((5, 5), [-120., -38., -119., -37.])
+    assert lats[0, 0] > lats[-1, 0]
+    assert lngs[0, -1] > lngs[0, 0]
 
 
 def test_sun_angle(test_data):
@@ -68,6 +78,8 @@ def test_sun_angle2(test_data):
         mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED'],
         mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME'])
 
+
+    assert np.mean(sunangles[0, :]) < np.mean(sunangles[-1, :]), "In N, Nrow should < Srow"
     assert sunangles.max() > mtl_sun
     assert sunangles.min() < mtl_sun
 

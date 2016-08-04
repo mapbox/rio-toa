@@ -11,8 +11,9 @@ def radiance(img, ML, AL, src_nodata=0):
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
     L = ML * Q + AL
+    
     where:
-        L  = TOA spectral radiance (Watts/( m2 * srad * mm))
+        L  = TOA spectral radiance (Watts / (m2 * srad * mm))
         ML = Band-specific multiplicative rescaling factor from the metadata
              (RADIANCE_MULT_BAND_x, where x is the band number)
         AL = Band-specific additive rescaling factor from the metadata
@@ -32,7 +33,7 @@ def radiance(img, ML, AL, src_nodata=0):
     Returns
     --------
     ndarray:
-        float64 ndarray with shape == input shape
+        float32 ndarray with shape == input shape
     """
 
     rs = ML * img.astype(np.float32) + AL

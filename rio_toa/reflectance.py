@@ -16,15 +16,13 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
     R_raw = MR * Q + AR
 
-    R =    R_raw / cos(Z) =   R_raw / sin(E)
+    R = R_raw / cos(Z) = R_raw / sin(E)
 
-    Z = 90 - np.radians(E)
-
-
+    Z = 90 - E (in degrees)
+    
     where:
 
         R_raw = TOA planetary reflectance, without correction for solar angle.
-                Note that P does not contain a correction for the sun angle.
         R = TOA reflectance with a correction for the sun angle.
         MR = Band-specific multiplicative rescaling factor from the metadata
             (REFLECTANCE_MULT_BAND_x, where x is the band number)
@@ -33,13 +31,13 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         Q = Quantized and calibrated standard product pixel values (DN)
         E = Local sun elevation angle. The scene center sun elevation angle
             in degrees is provided in the metadata (SUN_ELEVATION).
-        Z = Local solar zenith angle
+        Z = Local solar zenith angle (same angle as E, but measured from the
+            zenith instead of from the horizon).
 
     Parameters
     -----------
     img: ndarray
         array of input pixels of shape (rows, cols) or (rows, cols, depth)
-
     MR: float or list of floats
         multiplicative rescaling factor from scene metadata
     AR: float or list of floats
@@ -53,6 +51,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
+    
     if np.any(E < 0.0):
         raise ValueError("Sun Elevation Must Be Nonnegative")
 

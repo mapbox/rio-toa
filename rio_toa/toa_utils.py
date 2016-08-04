@@ -120,10 +120,9 @@ def _get_bounds_from_metadata(product_metadata):
 def rescale(arr, rescale_factor, dtype):
     """Convert an array from 0..1 to dtype, scaling up linearly
     """
-    if dtype == np.__dict__['uint8']:
-        arr *= rescale_factor * np.iinfo(np.uint8).max
-        return np.clip(arr, 1, np.iinfo(np.uint8).max).astype(dtype)
 
-    else:
-        arr *= rescale_factor * np.iinfo(np.uint16).max
-        return np.clip(arr, 1, np.iinfo(np.uint16).max).astype(dtype)
+    if dtype not in [np.uint8, np.uint16]:
+      raise ValueError('Rescaling converts to uint{8,16} only')
+    
+    arr *= rescale_factor * np.iinfo(dtype).max
+    return np.clip(arr, 1, np.iinfo(dtype).max).astype(dtype)

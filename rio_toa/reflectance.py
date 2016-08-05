@@ -169,7 +169,11 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
     }
 
     dst_profile.update(count=len(bands))
-    dst_profile.update(photometric='rgb')
+    
+    if len(bands) == 3:
+      dst_profile.update(photometric='rgb')
+    else:
+      dst_profile.update(photometric='minisblack')
 
     with riomucho.RioMucho(list(src_paths),
                            dst_path,

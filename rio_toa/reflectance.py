@@ -53,12 +53,11 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     """
     
     if np.any(E < 0.0):
-        raise ValueError("Sun Elevation Must Be Nonnegative")
+        raise ValueError("Sun elevation must be nonnegative (sun must be above horizon for entire scene)")
 
     input_shape = img.shape
 
     if len(input_shape) > 2:
-
         img = np.rollaxis(img, 0, len(input_shape))
 
     rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
@@ -68,7 +67,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         if np.rollaxis(rf, len(input_shape) - 1, 0).shape != input_shape:
             raise ValueError(
                 "Output shape %s is not equal to input shape %s"
-                %(rf.shape, input_shape))
+                % (rf.shape, input_shape))
         else:
             return np.rollaxis(rf, len(input_shape) - 1, 0)
     else:
@@ -82,8 +81,10 @@ def _reflectance_worker(open_files, window, ij, g_args):
     integrate rescaling functionality for
     different output datatypes
     """
-    data = riomucho.utils.array_stack([src.read(window=window).astype(np.float32)
-                                    for src in open_files])
+    data = riomucho.utils.array_stack([
+      src.read(window=window).astype(np.float32)
+      for src in open_files
+    ])
 
     depth, rows, cols = data.shape
 
@@ -101,6 +102,7 @@ def _reflectance_worker(open_files, window, ij, g_args):
                         g_args['time_collected_utc']).reshape(rows, cols, 1)
 
     else:
+        # We're doing whole-scene (instead of per-pixel) sunangle:
         E = np.array([g_args['E'] for i in range(depth)])
 
     output = toa_utils.rescale(reflectance(
@@ -129,15 +131,16 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
         Output is written to dst_path
     """
     mtl = toa_utils._load_mtl(src_mtl)
+    metadata = mtl['L1_METADATA_FILE']
 
-    M = [mtl['L1_METADATA_FILE']['RADIOMETRIC_RESCALING']['REFLECTANCE_MULT_BAND_{}'.format(b)]
+    M = [metadata['RADIOMETRIC_RESCALING']['REFLECTANCE_MULT_BAND_{}'.format(b)]
             for b in bands]
-    A = [mtl['L1_METADATA_FILE']['RADIOMETRIC_RESCALING']['REFLECTANCE_ADD_BAND_{}'.format(b)]
+    A = [metadata['RADIOMETRIC_RESCALING']['REFLECTANCE_ADD_BAND_{}'.format(b)]
             for b in bands]
 
-    E = mtl['L1_METADATA_FILE']['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
-    date_collected = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['DATE_ACQUIRED']
-    time_collected_utc = mtl['L1_METADATA_FILE']['PRODUCT_METADATA']['SCENE_CENTER_TIME']
+    E = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+    date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
+    time_collected_utc = metadata['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
     dst_dtype = np.__dict__[dst_dtype]
 

@@ -22,7 +22,7 @@ def test_cli_radiance_default(tmpdir):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        assert out.dtypes[0] == rasterio.float32
+        assert out.dtypes[0] == rasterio.uint16
 
 def test_cli_radiance_good(tmpdir):
     output = str(tmpdir.join('toa_radiance.tif'))
@@ -35,7 +35,7 @@ def test_cli_radiance_good(tmpdir):
     assert os.path.exists(output)
     with rasterio.open(output) as out:
         assert out.count == 1
-        assert out.dtypes[0] == rasterio.float32
+        assert out.dtypes[0] == rasterio.uint16
 
 def test_cli_radiance_fail(tmpdir):
     output = str(tmpdir.join('toa_radiance.tif'))
@@ -57,7 +57,7 @@ def test_cli_reflectance_default(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(output) as out:
         assert out.count == 1
-        assert out.dtypes[0] == rasterio.float32
+        assert out.dtypes[0] == rasterio.uint16
 
 
 def test_cli_reflectance_good(tmpdir):
@@ -70,7 +70,7 @@ def test_cli_reflectance_good(tmpdir):
     assert result.exit_code == 0
     with rasterio.open(output) as out:
         assert out.count == 1
-        assert out.dtypes[0] == rasterio.float32
+        assert out.dtypes[0] == rasterio.uint16
 
 
 def test_cli_reflectance_l8_bidx(tmpdir):

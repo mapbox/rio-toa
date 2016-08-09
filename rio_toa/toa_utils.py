@@ -122,7 +122,7 @@ def rescale(arr, rescale_factor, dtype):
     """
 
     if dtype not in [np.uint8, np.uint16]:
-      raise ValueError('Rescaling converts to uint{8,16} only')
-    
+        raise ValueError('Rescaling converts to uint{8,16} only')
+
     arr *= rescale_factor * np.iinfo(dtype).max
     return np.clip(arr, 1, np.iinfo(dtype).max).astype(dtype)

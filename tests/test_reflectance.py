@@ -75,7 +75,6 @@ def test_reflectance_negative_elevation():
         reflectance.reflectance(band, MR, AR, E)
 
 
-
 @pytest.fixture
 def test_var():
     src_path_b = 'tests/data/tiny_LC80460282016177LGN00_B2.TIF'
@@ -142,8 +141,8 @@ def test_calculate_reflectance(test_data):
     assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
     assert isinstance(M, float)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.float32)
-    assert toa_rescaled.dtype == np.float32
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    assert toa_rescaled.dtype == np.uint16
     assert np.min(tif_output_single) == np.min(toa_rescaled)
     assert int(np.max(tif_output_single)) == int(np.max(toa_rescaled))
 
@@ -176,9 +175,10 @@ def test_calculate_reflectance2(test_data):
                                 date_collected,
                                 time_collected_utc)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    assert toa.dtype == np.float32
-    assert np.all(toa) < 1.5
-    assert np.all(toa) >= 0.0
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    assert toa_rescaled.dtype == np.uint16
+    assert np.all(toa_rescaled) < 1.5
+    assert np.all(toa_rescaled) >= 0.0
 
 
 def test_calculate_landsat_reflectance(test_var, capfd):
@@ -187,7 +187,7 @@ def test_calculate_landsat_reflectance(test_var, capfd):
     rescale_factor = 1.0
     creation_options = {}
     band = 5
-    dst_dtype = 'float32'
+    dst_dtype = 'uint16'
     processes = 1
     pixel_sunangle = False
     reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path,

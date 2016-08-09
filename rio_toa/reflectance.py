@@ -19,7 +19,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
     R = R_raw / cos(Z) = R_raw / sin(E)
 
     Z = 90 - E (in degrees)
-    
+
     where:
 
         R_raw = TOA planetary reflectance, without correction for solar angle.
@@ -51,9 +51,10 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         float32 ndarray with shape == input shape
 
     """
-    
+
     if np.any(E < 0.0):
-        raise ValueError("Sun elevation must be nonnegative (sun must be above horizon for entire scene)")
+        raise ValueError("Sun elevation must be nonnegative "
+                         "(sun must be above horizon for entire scene)")
 
     input_shape = img.shape
 
@@ -75,11 +76,20 @@ def reflectance(img, MR, AR, E, src_nodata=0):
 
 
 def _reflectance_worker(open_files, window, ij, g_args):
-    """rio mucho worker for reflectance
-    TODO
-    ----
-    integrate rescaling functionality for
-    different output datatypes
+    """rio mucho worker for reflectance. It reads input
+    files and perform reflectance calculations on each window.
+
+    Parameters
+    ------------
+    open_files: list of rasterio open files
+    window: tuples
+    g_args: dictionary
+
+    Returns
+    ---------
+    out: None
+        Output is written to dst_path
+
     """
     data = riomucho.utils.array_stack([
       src.read(window=window).astype(np.float32)
@@ -133,10 +143,12 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
     mtl = toa_utils._load_mtl(src_mtl)
     metadata = mtl['L1_METADATA_FILE']
 
-    M = [metadata['RADIOMETRIC_RESCALING']['REFLECTANCE_MULT_BAND_{}'.format(b)]
-            for b in bands]
-    A = [metadata['RADIOMETRIC_RESCALING']['REFLECTANCE_ADD_BAND_{}'.format(b)]
-            for b in bands]
+    M = [metadata['RADIOMETRIC_RESCALING']
+         ['REFLECTANCE_MULT_BAND_{}'.format(b)]
+         for b in bands]
+    A = [metadata['RADIOMETRIC_RESCALING']
+         ['REFLECTANCE_ADD_BAND_{}'.format(b)]
+         for b in bands]
 
     E = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
     date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
@@ -169,11 +181,11 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
     }
 
     dst_profile.update(count=len(bands))
-    
+
     if len(bands) == 3:
-      dst_profile.update(photometric='rgb')
+        dst_profile.update(photometric='rgb')
     else:
-      dst_profile.update(photometric='minisblack')
+        dst_profile.update(photometric='minisblack')
 
     with riomucho.RioMucho(list(src_paths),
                            dst_path,

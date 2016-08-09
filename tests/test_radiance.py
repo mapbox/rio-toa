@@ -92,8 +92,8 @@ def test_calculate_radiance(test_data):
 
     assert isinstance(M, float)
     toa = radiance.radiance(tif, M, A)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.float32)
-    assert toa_rescaled.dtype == np.float32
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    assert toa_rescaled.dtype == np.uint16
     assert np.min(tif_output) == np.min(toa_rescaled)
     assert int(np.max(tif_output)) == int(np.max(toa_rescaled))
 
@@ -114,8 +114,9 @@ def test_calculate_radiance2(test_data):
                                  'RADIANCE_ADD_BAND_'],
                                 5)
 
-    toa = radiance.radiance(tif, M, A)
-    assert toa.dtype == np.float32
+    toa = toa_utils.rescale(radiance.radiance(tif, M, A),
+        float(55000.0/2**16), np.uint16)
+    assert toa.dtype == np.uint16
     assert np.all(toa) < 1.5
     assert np.all(toa) >= 0.0
 
@@ -126,7 +127,7 @@ def test_calculate_landsat_radiance(test_var, capfd):
     rescale_factor = 1.0
     creation_options = {}
     band = 5
-    dst_dtype = 'float32'
+    dst_dtype = 'uint16'
     processes = 1
     radiance.calculate_landsat_radiance(src_path, src_mtl, dst_path,
                                 rescale_factor, creation_options, band,

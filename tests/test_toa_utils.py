@@ -70,6 +70,7 @@ def test_load_mtl_key():
 	clouds = _load_mtl_key(mtl_test, keys2, band=None)
 	assert clouds == 19.74
 
+
 def test_rescale():
 	arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3,3))
 	dtype = np.__dict__['uint16']
@@ -82,6 +83,7 @@ def test_rescale():
 	assert np.array_equal(rescaled_arr[mask], arr[mask].astype(int))
 	assert rescaled_arr.dtype == 'uint16'
 
+
 def test_rescale2():
 	arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3,3))
 	dtype = np.__dict__['uint8']
@@ -93,4 +95,12 @@ def test_rescale2():
 	assert np.all(rescaled_arr) >= 0.0
 	assert np.array_equal(rescaled_arr[mask], arr[mask].astype(int))
 	assert rescaled_arr.dtype == 'uint8'
+
+
+def test_rescale_dtype_error():
+	arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3,3))
+	dtype = np.__dict__['float32']
+	rescale_factor = 1.0
+	with pytest.raises(ValueError):
+		rescaled_arr = rescale(arr, rescale_factor, dtype)
 

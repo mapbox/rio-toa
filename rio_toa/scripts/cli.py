@@ -24,8 +24,8 @@ def toa():
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype',
-              type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
-              default='float32')
+              type=click.Choice(['uint16', 'uint8']),
+              default='uint16')
 @click.option('--rescale-factor', '-r',
               type=float,
               default=float(55000.0/2**16),
@@ -60,8 +60,8 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype',
-              type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
-              default='float32')
+              type=click.Choice(['uint16', 'uint8']),
+              default='uint16')
 @click.option('--rescale-factor', '-r',
               type=float,
               default=float(55000.0/2**16),

@@ -129,3 +129,18 @@ def rescale(arr, rescale_factor, dtype):
     else:
         arr *= rescale_factor * np.iinfo(np.uint16).max
         return np.clip(arr, 1, np.iinfo(np.uint16).max).astype(dtype)
+
+
+def temp_rescale(arr, temp_scale):
+    if temp_scale == 'K':
+        return arr
+
+    elif temp_scale == 'F':
+        return arr * (9 / 5.0) - 459.67
+
+    elif temp_scale == 'C':
+        return arr - 273.15
+
+    else:
+        raise ValueError('%s is not a valid temperature scale'
+                         % (temp_scale))

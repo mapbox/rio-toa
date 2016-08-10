@@ -69,7 +69,7 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         if np.rollaxis(rf, len(input_shape) - 1, 0).shape != input_shape:
             raise ValueError(
                 "Output shape %s is not equal to input shape %s"
-                %(rf.shape, input_shape))
+                % (rf.shape, input_shape))
         else:
             return np.rollaxis(rf, len(input_shape) - 1, 0)
     else:

@@ -26,13 +26,14 @@ def toa():
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype',
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
-              default='float32')
+              default='float32',
+              help='Output data type')
 @click.option('--rescale-factor', '-r',
               type=float,
               default=float(55000.0/2**16),
-              help='rescale post-TOA tifs to 55,000 or to full 16-bit')
+              help='Rescale post-TOA tifs to 55,000 or to full 16-bit')
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
-              help="File path template [default='.*/LC8.*\_B{b}.TIF']")
+              help="File path template [Default ='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0, type=int,
               help="L8 Band that the src_path represents"
@@ -62,20 +63,21 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype',
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
-              default='float32')
+              default='float32',
+              help='Output data type')
 @click.option('--rescale-factor', '-r',
               type=float,
               default=float(55000.0/2**16),
-              help='rescale post-TOA tifs to 55,000 or to full 16-bit')
+              help='Rescale post-TOA tifs to 55,000 or to full 16-bit')
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
-              help="File path template [default='.*/LC8.*\_B{b}.TIF']")
+              help="File path template [Default ='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--l8-bidx', default=0, type=int,
               help="L8 Band that the src_path represents"
               "(Default is parsed from file name)")
 @click.option('--verbose', '-v', is_flag=True, default=False)
 @click.option('--pixel-sunangle', '-p', is_flag=True, default=False,
-              help="per pixel sun elevation")
+              help="Per pixel sun elevation")
 @click.pass_context
 @creation_options
 def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
@@ -99,15 +101,16 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
 @click.argument('src_path', type=click.Path(exists=True))
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
-@click.option('--dst-dtype',
+@click.option('--dst-dtype', '-d',
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
-              default='float32')
-@click.option('--rescale-factor', '-r',
-              type=float,
-              default=float(55000.0/2**16),
-              help='rescale post-TOA tifs to 55,000 or to full 16-bit')
+              default='float32',
+              help='Output data type')
+@click.option('--temp_scale', '-s',
+              type=click.Choice(['K', 'F', 'C']),
+              default='K',
+              help='Temperature scale [Default = K (Kelvin)]')
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
-              help="File path template [default='.*/LC8.*\_B{b}.TIF']")
+              help="File path template [Default ='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
 @click.option('--thermal-bidx', default=0, type=int,
               help="L8 thermal band that the src_path represents"
@@ -116,11 +119,11 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
 @click.pass_context
 @creation_options
 def brighttemp(ctx, src_path, src_mtl, dst_path, dst_dtype,
-                rescale_factor, readtemplate, workers, thermal_bidx,
-                verbose, creation_options):
+               temp_scale, readtemplate, workers,
+               thermal_bidx, verbose, creation_options):
     """Calculates Landsat8 at-satellite brightness temperature
     TIRS band data can be converted from spectral radiance
-    to brightness temperature using the thermal 
+    to brightness temperature using the thermal
     constants provided in the metadata file:
     """
 
@@ -130,10 +133,9 @@ def brighttemp(ctx, src_path, src_mtl, dst_path, dst_dtype,
     if thermal_bidx == 0:
         thermal_bidx = _parse_bands_from_filename([src_path], readtemplate)[0]
 
-    calculate_landsat_brightness_temperature(src_path, src_mtl, dst_path,
-                                  rescale_factor, creation_options,
-                                  thermal_bidx, dst_dtype,
-                                  workers)
+    calculate_landsat_brightness_temperature(
+        src_path, src_mtl, dst_path, temp_scale,
+        creation_options, thermal_bidx, dst_dtype, workers)
 
 
 @click.command('parsemtl')

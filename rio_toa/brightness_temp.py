@@ -17,7 +17,7 @@ def brightness_temp(img, ML, AL, K1, K2, src_nodata=0):
 
     T = K2 / np.log((K1 / L)  + 1)
 
-    and 
+    and
 
     L = ML * Q + AL
 
@@ -55,7 +55,9 @@ def brightness_temp(img, ML, AL, K1, K2, src_nodata=0):
         float32 ndarray with shape == input shape
     """
     L = radiance.radiance(img, ML, AL, src_nodata=0)
-    T = K2 / np.log((K1 / L)  + 1)
+    L[img == 0.0] = np.nan
+
+    T = K2 / np.log((K1 / L) + 1)
 
     return T
 
@@ -76,22 +78,22 @@ def _brightness_temp_worker(data, window, ij, g_args):
         Output is written to dst_path
     """
 
-    output = toa_utils.rescale(
-                brightness_temp(
-                    data[0],
-                    g_args['M'],
-                    g_args['A'],
-                    g_args['K1'],
-                    g_args['K2'],
-                    g_args['src_nodata']),
-                g_args['rescale_factor'],
-                g_args['dst_dtype'])
+    output = toa_utils.temp_rescale(
+                    brightness_temp(
+                        data[0],
+                        g_args['M'],
+                        g_args['A'],
+                        g_args['K1'],
+                        g_args['K2'],
+                        g_args['src_nodata']),
+                    g_args['temp_scale'])
 
     return output
 
 
-def calculate_landsat_brightness_temperature(src_path, src_mtl, dst_path, rescale_factor,
-                               creation_options, band, dst_dtype, processes):
+def calculate_landsat_brightness_temperature(
+        src_path, src_mtl, dst_path, temp_scale,
+        creation_options, band, dst_dtype, processes):
 
     """Parameters
     ------------
@@ -129,15 +131,15 @@ def calculate_landsat_brightness_temperature(src_path, src_mtl, dst_path, rescal
                                 band)
 
     K1 = toa_utils._load_mtl_key(mtl,
-                                     ['L1_METADATA_FILE',
-                                      'TIRS_THERMAL_CONSTANTS',
-                                      'K1_CONSTANT_BAND_'],
-                                     band)
+                                 ['L1_METADATA_FILE',
+                                  'TIRS_THERMAL_CONSTANTS',
+                                  'K1_CONSTANT_BAND_'],
+                                 band)
     K2 = toa_utils._load_mtl_key(mtl,
-                                     ['L1_METADATA_FILE',
-                                      'TIRS_THERMAL_CONSTANTS',
-                                      'K2_CONSTANT_BAND_'],
-                                     band)
+                                 ['L1_METADATA_FILE',
+                                  'TIRS_THERMAL_CONSTANTS',
+                                  'K2_CONSTANT_BAND_'],
+                                 band)
 
     dst_dtype = np.__dict__[dst_dtype]
 
@@ -157,7 +159,7 @@ def calculate_landsat_brightness_temperature(src_path, src_mtl, dst_path, rescal
         'K1': K1,
         'K2': K2,
         'src_nodata': 0,
-        'rescale_factor': rescale_factor,
+        'temp_scale': temp_scale,
         'dst_dtype': dst_dtype
         }
 
@@ -168,5 +170,3 @@ def calculate_landsat_brightness_temperature(src_path, src_mtl, dst_path, rescal
                            global_args=global_args) as rm:
 
         rm.run(processes)
-
-

@@ -41,7 +41,7 @@ def _load_mtl_key(mtl, keys, band=None):
     if band is not None and isinstance(band, int):
         keys[-1] = '%s%s' % (keys[-1], band)
 
-    # for each key, the mtl is winnowed down by each key hash
+    # for each key, the mtl is windowed down by each key hash
     for k in keys:
         mtl = mtl[k]
 

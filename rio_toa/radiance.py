@@ -7,12 +7,13 @@ from rio_toa import toa_utils
 
 
 def radiance(img, ML, AL, src_nodata=0):
-    u"""Calculate surface radiance of Landsat 8
+    """Calculate surface radiance of Landsat 8
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
     L = ML * Q + AL
+
     where:
-        L  = TOA spectral radiance (Watts/( m2 * srad * mm))
+        L  = TOA spectral radiance (Watts / (m2 * srad * mm))
         ML = Band-specific multiplicative rescaling factor from the metadata
              (RADIANCE_MULT_BAND_x, where x is the band number)
         AL = Band-specific additive rescaling factor from the metadata
@@ -32,7 +33,7 @@ def radiance(img, ML, AL, src_nodata=0):
     Returns
     --------
     ndarray:
-        float64 ndarray with shape == input shape
+        float32 ndarray with shape == input shape
     """
 
     rs = ML * img.astype(np.float32) + AL
@@ -47,12 +48,15 @@ def _radiance_worker(data, window, ij, g_args):
     TODO: integrate rescaling functionality for
     different output datatypes
     """
-    output = toa_utils.rescale(radiance(
+    output = toa_utils.rescale(
+                radiance(
                     data[0],
                     g_args['M'],
                     g_args['A'],
                     g_args['src_nodata']),
-                g_args['rescale_factor'], g_args['dst_dtype'])
+                g_args['rescale_factor'],
+                g_args['dst_dtype'])
+
     return output
 
 

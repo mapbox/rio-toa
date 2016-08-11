@@ -33,7 +33,7 @@ setup(name='rio-toa',
       zip_safe=False,
       install_requires=["click", "rasterio", "rio-mucho"],
       extras_require={
-          'test': ['pytest', 'pytest-cov', 'codecov']},
+          'test': ['pytest', 'hypothesis', 'pytest-cov', 'codecov']},
       entry_points="""
       [rasterio.rio_plugins]
       toa=rio_toa.scripts.cli:toa

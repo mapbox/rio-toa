@@ -55,7 +55,7 @@ def brightness_temp(img, ML, AL, K1, K2, src_nodata=0):
         float32 ndarray with shape == input shape
     """
     L = radiance.radiance(img, ML, AL, src_nodata=0)
-    L[img == 0.0] = np.nan
+    L[img == src_nodata] = np.NaN
 
     T = K2 / np.log((K1 / L) + 1)
 

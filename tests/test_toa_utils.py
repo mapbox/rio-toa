@@ -3,7 +3,8 @@ import numpy as np
 
 from rio_toa.toa_utils import (
     _parse_bands_from_filename,
-    _load_mtl_key, _load_mtl, rescale)
+    _load_mtl_key, _load_mtl, rescale,
+    temp_rescale)
 
 
 def test_parse_band_from_filename_default():
@@ -96,3 +97,25 @@ def test_rescale2():
     assert np.all(rescaled_arr) >= 0.0
     assert np.array_equal(rescaled_arr[mask], arr[mask].astype(int))
     assert rescaled_arr.dtype == 'uint8'
+
+
+def test_temp_rescale_K():
+    arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
+    np.testing.assert_array_equal(arr, temp_rescale(arr, 'K'))
+
+
+def test_temp_rescale_F():
+    arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
+    np.testing.assert_array_equal(arr * (9 / 5.0) - 459.67,
+                                  temp_rescale(arr, 'F'))
+
+
+def test_temp_rescale_C():
+    arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
+    np.testing.assert_array_equal(arr - 273.15, temp_rescale(arr, 'C'))
+
+
+def test_temp_rescale_error():
+    arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
+    with pytest.raises(ValueError):
+        temp_rescale(arr, 'FC')

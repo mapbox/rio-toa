@@ -2,6 +2,7 @@ import os
 import json
 import numpy as np
 import rasterio as rio
+import click
 import riomucho
 import pytest
 from hypothesis import given
@@ -12,6 +13,21 @@ from rasterio.coords import BoundingBox
 from rio_toa import brightness_temp
 from rio_toa import radiance
 from rio_toa import toa_utils
+from raster_tester.compare import affaux, upsample_array
+
+
+def flex_compare(r1, r2, thresh=10):
+    upsample = 4
+    r1 = r1[::upsample]
+    r2 = r2[::upsample]
+    toAff, frAff = affaux(upsample)
+    r1 = upsample_array(r1, upsample, frAff, toAff)
+    r2 = upsample_array(r2, upsample, frAff, toAff)
+    tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64))
+    click.echo('{0} values exceed the threshold difference '
+               'with a max variance of {1}'.format(
+                  np.sum(tdiff > thresh), tdiff.max()), err=True)
+    return not np.any(tdiff > thresh)
 
 
 # Testing brightness_temp python api
@@ -37,12 +53,11 @@ def test_brightness_temp(img, ML, AL, K1, K2):
               elements=st.integers(
                 min_value=1,
                 max_value=np.iinfo('uint16').max)),
-       st.text(),
+       st.text(min_size=1),
        st.floats(min_value=0.1, max_value=1.0),
        st.floats(),
        st.floats())
 def test_brightness_temp_wrong_type(img, ML, AL, K1, K2):
-    assert type(ML) == unicode
     with pytest.raises(TypeError):
         brightness_temp.brightness_temp(img, ML, AL, K1, K2, src_nodata=0)
 
@@ -121,6 +136,6 @@ def test_calculate_landsat_brightness_temperature(test_data):
     assert isinstance(A, float)
     assert isinstance(K1, float)
     assert isinstance(K2, float)
-    BT = brightness_temp.brightness_temp(tif, M, A, K1, K2)
+    BT = brightness_temp.brightness_temp(tif, M, A, K1, K2, src_nodata=0)
     assert BT.dtype == np.float32
-    np.testing.assert_array_equal(tif_output, BT)
+    assert flex_compare(tif_output, BT)

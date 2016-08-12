@@ -42,7 +42,7 @@ The `radiance.randiance` function accepts the following as inputs:
 
 - numpy 2D array (single band)  
 - ML (multiplicative rescaling factor from scene mtl)  
-- AL (additive rescaling factor from scene mtl) and outputs a numpy array.  
+- AL (additive rescaling factor from scene mtl)
 
 and outputs:
 - numpy 2D array (single band)
@@ -65,7 +65,7 @@ and outputs:
 
 ======
 ### `rio_toa.reflectance`
-The `reflectance` module calculates surface reflectance of Landsat 8 as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php. The `reflectance.reflectance` function accept and return numpy `ndarrays`, MR ()
+The `reflectance` module calculates surface reflectance of Landsat 8 as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php.
 
 #### 1. `reflectance`
 The `reflectance.reflectance` function accepts the following as inputs:
@@ -127,7 +127,39 @@ This option requires the additional ['DATE_ACQUIRED'] and ['SCENE_CENTER_TIME'] 
                     'src_nodata'),
                   rescale_factor, dst_dtype)
 ```
+### `rio_toa.brightness_temp`
+The 'brightness_temp' module converts Landsat 8 TIRS band data from spectral radiance to brightness temperature as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php.
 
+
+#### 1. `brightness_temp`
+The `brightness_temp.brightness_temp` function accepts the following as inputs:
+
+- numpy 2D array (single band)
+- ML (multiplicative rescaling factor from scene mtl)
+- AL (additive rescaling factor from scene mtl)
+- K1 (thermal conversion constant from the scene mtl)
+- K2 (thermal conversion constant from the scene mtl)
+
+and outputs:
+- numpy 2D array (single band)
+
+```
+>>> from rio_toa import brightness_temp
+>>> from rio_toa import toa_utils
+...
+>>> bt = radiance.radiance(tif, ML, AL, K1, K2, src_nodata=0)
+>>> bt_rescaled= toa_utils.temp_rescale(toa, temp_scale)
+```
+#### 2.`calculate_landsat_brightness_temperature`
+```
+>>> from rio_toa import brightness_temp
+...
+>>> brightness_temp.calculate_landsat_brightness_temperature(src_path, src_mtl,
+                                              dst_path, temp_scale,
+                                              creation_options, thermal_bidx,
+                                              dst_dtype, processes)
+
+```
 
 ## `CLI`
 
@@ -181,6 +213,32 @@ Options:
                          documentation for the selected output driver for more
                          information.
   --help                 Show this message and exit.
+```
+
+
+### `brighttemp`
+
+```
+Usage: rio toa brighttemp [OPTIONS] SRC_PATH SRC_MTL DST_PATH
+
+  Calculates Landsat8 at-satellite brightness temperature TIRS band data can
+  be converted from spectral radiance to brightness temperature using the
+  thermal constants provided in the metadata file:
+
+Options:
+  -d, --dst-dtype [float32|float64|uint16|uint8]
+                                  Output data type
+  -s, --temp_scale [K|F|C]        Temperature scale [Default = K (Kelvin)]
+  -t, --readtemplate TEXT         File path template [Default
+                                  ='.*/LC8.*\_B{b}.TIF']
+  -j, --workers INTEGER
+  --thermal-bidx INTEGER          L8 thermal band that the src_path
+                                  represents(Default is parsed from file name)
+  -v, --verbose
+  --co NAME=VALUE                 Driver specific creation options.See the
+                                  documentation for the selected output driver
+                                  for more information.
+  --help                          Show this message and exit.
 ```
 
 ### `parsemtl`

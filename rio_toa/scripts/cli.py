@@ -121,7 +121,7 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
 def brighttemp(ctx, src_path, src_mtl, dst_path, dst_dtype,
                temp_scale, readtemplate, workers,
                thermal_bidx, verbose, creation_options):
-    """Calculates Landsat8 at-satellite brightness temperature
+    """Calculates Landsat8 at-satellite brightness temperature.
     TIRS band data can be converted from spectral radiance
     to brightness temperature using the thermal
     constants provided in the metadata file:

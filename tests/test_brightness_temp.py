@@ -107,7 +107,7 @@ def test_data(test_var):
     return tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl
 
 
-def test_calculate_landsat_brightness_temperature(test_data):
+def test_brightness_temperature2(test_data):
     tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
     band = 11
 
@@ -139,3 +139,27 @@ def test_calculate_landsat_brightness_temperature(test_data):
     BT = brightness_temp.brightness_temp(tif, M, A, K1, K2, src_nodata=0)
     assert BT.dtype == np.float32
     assert flex_compare(tif_output, BT)
+
+
+def test_calculate_landsat_brightness_temperature(test_var, test_data, capfd):
+    src_path, src_mtl, tif_output_stack = \
+        test_var[0], test_var[1], test_data[-3]
+    dst_path = '/tmp/bt.tif'
+    expected_path = 'tests/expected/bt.tif'
+    temp_scale = 'F'
+    creation_options = {}
+    thermal_bidx = 11
+    dst_dtype = 'float32'
+    processes = 1
+
+    brightness_temp.calculate_landsat_brightness_temperature(src_path, src_mtl,
+                                              dst_path, temp_scale,
+                                              creation_options, thermal_bidx,
+                                              dst_dtype, processes)
+
+    out, err = capfd.readouterr()
+    assert os.path.exists(dst_path)
+
+    with rio.open(dst_path) as created:
+        with rio.open(expected_path) as expected:
+            assert flex_compare(created.read(), expected.read())

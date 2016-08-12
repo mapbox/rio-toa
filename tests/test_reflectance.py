@@ -63,6 +63,7 @@ def test_reflectance_wrong_shape():
     with pytest.raises(ValueError):
         reflectance.reflectance(band, 35.1, np.array([1, 3]), 90.0)
 
+
 def test_reflectance_negative_elevation():
     band = np.array([[0, 0, 0],
                      [0, 2, 1],

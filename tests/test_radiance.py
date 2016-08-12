@@ -92,17 +92,18 @@ def test_calculate_radiance(test_data):
 
     assert isinstance(M, float)
     toa = radiance.radiance(tif, M, A)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.float32)
-    assert toa_rescaled.dtype == np.float32
-    assert np.min(tif_output) == np.min(toa_rescaled)
-    assert int(np.max(tif_output)) == int(np.max(toa_rescaled))
-
-
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint8)
+    scale = float(np.iinfo(np.uint16).max) / float(np.iinfo(np.uint8).max)
+    tif_out_rescaled = np.clip(
+        (tif_output / scale),
+        1, np.iinfo(np.uint8).max).astype(np.uint8)
+    assert toa_rescaled.dtype == np.uint8
+    assert np.min(tif_out_rescaled) == np.min(toa_rescaled)
+    assert int(np.max(tif_out_rescaled)) == int(np.max(toa_rescaled))
 
 
 def test_calculate_radiance2(test_data):
     tif, tif_meta, tif_output, tif_shape, tif_output_meta, mtl = test_data
-
     M = toa_utils._load_mtl_key(mtl,
                                 ['L1_METADATA_FILE',
                                  'RADIOMETRIC_RESCALING',
@@ -114,8 +115,10 @@ def test_calculate_radiance2(test_data):
                                  'RADIANCE_ADD_BAND_'],
                                 5)
 
-    toa = radiance.radiance(tif, M, A)
-    assert toa.dtype == np.float32
+    toa = toa_utils.rescale(
+            radiance.radiance(tif, M, A),
+            float(55000.0/2**16), np.uint16)
+    assert toa.dtype == np.uint16
     assert np.all(toa) < 1.5
     assert np.all(toa) >= 0.0
 
@@ -126,10 +129,11 @@ def test_calculate_landsat_radiance(test_var, capfd):
     rescale_factor = 1.0
     creation_options = {}
     band = 5
-    dst_dtype = 'float32'
+    dst_dtype = 'uint8'
     processes = 1
-    radiance.calculate_landsat_radiance(src_path, src_mtl, dst_path,
-                                rescale_factor, creation_options, band,
-                                dst_dtype, processes)
+    radiance.calculate_landsat_radiance(
+        src_path, src_mtl, dst_path,
+        rescale_factor, creation_options, band,
+        dst_dtype, processes)
     out, err = capfd.readouterr()
     assert os.path.exists(dst_path)

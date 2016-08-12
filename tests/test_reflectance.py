@@ -7,11 +7,9 @@ import riomucho
 import pytest
 from rasterio.coords import BoundingBox
 from raster_tester.compare import affaux, upsample_array
-
-
-
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
+
 
 def flex_compare(r1, r2, thresh=10):
     upsample = 4
@@ -21,8 +19,9 @@ def flex_compare(r1, r2, thresh=10):
     r1 = upsample_array(r1, upsample, frAff, toAff)
     r2 = upsample_array(r2, upsample, frAff, toAff)
     tdiff = np.abs(r1.astype(np.float64) - r2.astype(np.float64))
-    click.echo('{0} values exceed the threshold difference with a max variance of {1}'.format(
-        np.sum(tdiff > thresh), tdiff.max()), err=True)
+    click.echo('{0} values exceed the threshold'
+               'difference with a max variance of {1}'.format(
+                  np.sum(tdiff > thresh), tdiff.max()), err=True)
     return not np.any(tdiff > thresh)
 
 
@@ -63,6 +62,7 @@ def test_reflectance_wrong_shape():
     with pytest.raises(ValueError):
         reflectance.reflectance(band, 35.1, np.array([1, 3]), 90.0)
 
+
 def test_reflectance_negative_elevation():
     band = np.array([[0, 0, 0],
                      [0, 2, 1],
@@ -73,7 +73,6 @@ def test_reflectance_negative_elevation():
 
     with pytest.raises(ValueError):
         reflectance.reflectance(band, MR, AR, E)
-
 
 
 @pytest.fixture
@@ -142,10 +141,39 @@ def test_calculate_reflectance(test_data):
     assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
     assert isinstance(M, float)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.float32)
-    assert toa_rescaled.dtype == np.float32
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    assert toa_rescaled.dtype == np.uint16
     assert np.min(tif_output_single) == np.min(toa_rescaled)
     assert int(np.max(tif_output_single)) == int(np.max(toa_rescaled))
+
+def test_calculate_reflectance_uint8(test_data):
+    tif_b, tif_output_single, mtl = test_data[0], test_data[5], test_data[-1]
+
+    M = toa_utils._load_mtl_key(mtl,
+                                ['L1_METADATA_FILE',
+                                 'RADIOMETRIC_RESCALING',
+                                 'REFLECTANCE_MULT_BAND_'],
+                                5)
+    A = toa_utils._load_mtl_key(mtl,
+                                ['L1_METADATA_FILE',
+                                 'RADIOMETRIC_RESCALING',
+                                 'REFLECTANCE_ADD_BAND_'],
+                                5)
+    E = toa_utils._load_mtl_key(mtl,
+                                ['L1_METADATA_FILE',
+                                 'IMAGE_ATTRIBUTES',
+                                 'SUN_ELEVATION'])
+
+    assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
+    assert isinstance(M, float)
+    toa = reflectance.reflectance(tif_b, M, A, E)
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint8)
+    scale = float(np.iinfo(np.uint16).max) / float(np.iinfo(np.uint8).max)
+    tif_out_rescaled = np.clip(
+        (tif_output_single / scale),
+        1, np.iinfo(np.uint8).max).astype(np.uint8)
+    assert toa_rescaled.dtype == np.uint8
+    assert np.min(tif_out_rescaled) == np.min(toa_rescaled)
 
 
 def test_calculate_reflectance2(test_data):
@@ -176,9 +204,10 @@ def test_calculate_reflectance2(test_data):
                                 date_collected,
                                 time_collected_utc)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    assert toa.dtype == np.float32
-    assert np.all(toa) < 1.5
-    assert np.all(toa) >= 0.0
+    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    assert toa_rescaled.dtype == np.uint16
+    assert np.all(toa_rescaled) < 1.5
+    assert np.all(toa_rescaled) >= 0.0
 
 
 def test_calculate_landsat_reflectance(test_var, capfd):
@@ -187,7 +216,7 @@ def test_calculate_landsat_reflectance(test_var, capfd):
     rescale_factor = 1.0
     creation_options = {}
     band = 5
-    dst_dtype = 'float32'
+    dst_dtype = 'uint8'
     processes = 1
     pixel_sunangle = False
     reflectance.calculate_landsat_reflectance([src_path], src_mtl, dst_path,
@@ -214,7 +243,7 @@ def test_calculate_landsat_reflectance_single_pixel(test_var, capfd):
                                               [band], dst_dtype, processes,
                                               pixel_sunangle)
     out, err = capfd.readouterr()
-    
+
     with rio.open(dst_path) as created:
         with rio.open(expected_path) as expected:
             assert flex_compare(created.read(), expected.read())
@@ -227,7 +256,7 @@ def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
     expected_path = 'tests/expected/ref2.tif'
     rescale_factor = float(55000.0/2**16)
     creation_options = {}
-    dst_dtype = 'uint16'
+    dst_dtype = 'uint8'
     processes = 1
     pixel_sunangle = True
 

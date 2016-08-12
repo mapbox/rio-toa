@@ -17,28 +17,26 @@ def _parse_bands_from_filename(filenames, template):
 
 def _load_mtl_key(mtl, keys, band=None):
     """
-    Loads metadata from a Landsat MTL dict based on an arbitrary set of keys
+    Loads requested metadata from a Landsat MTL dict
 
     Parameters
     -----------
     mtl: dict
         parsed Landsat 8 MTL metadata
     keys: iterable
-        an interable of arbitrary length that contains
-        successive dict hashes for mtl
+        a list containing arbitrary keys to load from the MTL
     band: int
-        band number to join to last key value.
-        ignored if None or if not int
+        band number to join to last key value
+        (ignored if not int)
 
     Returns
     --------
-    output: any value or object
-        the resulting value or object
-        from key hash succession
+    output: any value
+        the value corresponding to the provided key in the MTL
     """
     keys = list(keys)
 
-    if band is not None and isinstance(band, int):
+    if isinstance(band, int):
         keys[-1] = '%s%s' % (keys[-1], band)
 
     # for each key, the mtl is winnowed down by each key hash
@@ -90,14 +88,14 @@ def _parse_mtl_txt(mtltxt):
 
 
 def _cast_to_best_type(kd):
-        key, data = kd[0]
+    key, data = kd[0]
+    try:
+        return key, int(data)
+    except ValueError as err:
         try:
-            return key, int(data)
+            return key, float(data)
         except ValueError as err:
-            try:
-                return key, float(data)
-            except ValueError as err:
-                return key, u'{}'.format(data.strip('"'))
+            return key, u'{}'.format(data.strip('"'))
 
 
 def _parse_data(line):
@@ -122,10 +120,9 @@ def _get_bounds_from_metadata(product_metadata):
 def rescale(arr, rescale_factor, dtype):
     """Convert an array from 0..1 to dtype, scaling up linearly
     """
-    if dtype == np.__dict__['uint8']:
-        arr *= rescale_factor * np.iinfo(np.uint8).max
-        return np.clip(arr, 1, np.iinfo(np.uint8).max).astype(dtype)
 
-    else:
-        arr *= rescale_factor * np.iinfo(np.uint16).max
-        return np.clip(arr, 1, np.iinfo(np.uint16).max).astype(dtype)
+    if dtype not in [np.uint8, np.uint16]:
+        raise ValueError('Rescaling converts to uint{8,16} only')
+
+    arr *= rescale_factor * np.iinfo(dtype).max
+    return np.clip(arr, 1, np.iinfo(dtype).max).astype(dtype)

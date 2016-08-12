@@ -39,7 +39,7 @@ def _load_mtl_key(mtl, keys, band=None):
     if isinstance(band, int):
         keys[-1] = '%s%s' % (keys[-1], band)
 
-    # for each key, the mtl is winnowed down by each key hash
+    # for each key, the mtl is windowed down by each key hash
     for k in keys:
         mtl = mtl[k]
 
@@ -126,3 +126,18 @@ def rescale(arr, rescale_factor, dtype):
 
     arr *= rescale_factor * np.iinfo(dtype).max
     return np.clip(arr, 1, np.iinfo(dtype).max).astype(dtype)
+
+
+def temp_rescale(arr, temp_scale):
+    if temp_scale == 'K':
+        return arr
+
+    elif temp_scale == 'F':
+        return arr * (9 / 5.0) - 459.67
+
+    elif temp_scale == 'C':
+        return arr - 273.15
+
+    else:
+        raise ValueError('%s is not a valid temperature scale'
+                         % (temp_scale))

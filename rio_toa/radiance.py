@@ -7,7 +7,7 @@ from rio_toa import toa_utils
 
 
 def radiance(img, ML, AL, src_nodata=0):
-    u"""Calculate surface radiance of Landsat 8
+    """Calculate surface radiance of Landsat 8
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
     L = ML * Q + AL

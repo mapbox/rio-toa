@@ -8,7 +8,7 @@ import rasterio
 import json
 
 from rasterio.rio.options import creation_options
-from rio_toa.scripts.cli import radiance, reflectance, parsemtl
+from rio_toa.scripts.cli import radiance, reflectance, brighttemp, parsemtl
 
 
 def test_cli_radiance_default(tmpdir):
@@ -131,6 +131,44 @@ def test_cli_reflectance_multiband_stack(tmpdir):
     with rasterio.open(output) as out:
         assert out.count == 3
         assert out.dtypes[0] == rasterio.uint16
+
+
+def test_cli_brighttemp(tmpdir):
+    output = str(tmpdir.join('toa_brightness_temp.TIF'))
+    runner = CliRunner()
+    result = runner.invoke(brighttemp,
+            ['tests/data/tiny_LC81390452014295LGN00_B10.TIF',
+             'tests/data/LC81390452014295LGN00_MTL.json',
+             output, '-t', '.*/tiny_LC8.*\_B{b}.TIF'])
+
+    assert len(os.listdir(str(tmpdir))) == 1
+    assert result.exit_code == 0
+
+
+def test_cli_brighttemp_thermal_bidx(tmpdir):
+    output = str(tmpdir.join('toa_brightness_temp.TIF'))
+    runner = CliRunner()
+    result = runner.invoke(brighttemp,
+            ['tests/data/tiny_LC81390452014295LGN00_B10.TIF',
+             'tests/data/LC81390452014295LGN00_MTL.json',
+             output, '-t', '.*/tiny_LC8.*\_B{b}.TIF',
+             '--thermal_bidx', '11'])
+
+    assert len(os.listdir(str(tmpdir))) == 1
+    assert result.exit_code == 0
+
+
+def test_cli_brighttemp_thermal_bidx(tmpdir):
+    output = str(tmpdir.join('toa_brightness_temp.TIF'))
+    runner = CliRunner()
+    result = runner.invoke(brighttemp,
+            ['tests/data/tiny_LC81390452014295LGN00_B10.TIF',
+             'tests/data/LC81390452014295LGN00_MTL.json',
+             output, '-t', '.*/tiny_LC8.*\_B{b}.TIF',
+             '-v'])
+
+    assert len(os.listdir(str(tmpdir))) == 1
+    assert result.exit_code == 0
 
 
 def test_cli_parsemtl_good(tmpdir):

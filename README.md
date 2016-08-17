@@ -35,7 +35,7 @@ pip install -e .
 ```
 ## Python API
 ### `rio_toa.radiance`
-The `radiance` module calculates surface radiance of Landsat 8 as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php.
+The `radiance` module calculates top of atmosphere radiance of Landsat 8 as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php.
 
 #### 1. `radiance`
 The `radiance.randiance` function accepts the following as inputs:  
@@ -65,7 +65,7 @@ and outputs:
 
 ======
 ### `rio_toa.reflectance`
-The `reflectance` module calculates surface reflectance of Landsat 8 as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php.
+The `reflectance` module calculates top of atmosphere reflectance of Landsat 8 as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php.
 
 #### 1. `reflectance`
 The `reflectance.reflectance` function accepts the following as inputs:
@@ -168,7 +168,7 @@ and outputs:
 ```
 Usage: rio toa radiance [OPTIONS] SRC_PATH SRC_MTL DST_PATH
 
-  Calculates Landsat8 Surface Radiance
+  Calculates Landsat8 Top of Atmosphere Radiance
 
 Options:
   --dst-dtype            Output datatype. Default='float32'
@@ -193,7 +193,7 @@ Options:
 ```
 Usage: rio toa reflectance [OPTIONS] SRC_PATH SRC_MTL DST_PATH
 
-  Calculates Landsat8 Surface Reflectance
+  Calculates Landsat8 Top of Atmosphere Reflectance
 
 Options:
 

@@ -44,7 +44,7 @@ def toa():
 def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
              readtemplate, verbose, creation_options, l8_bidx,
              dst_dtype, workers):
-    """Calculates Landsat8 Surface Radiance
+    """Calculates Landsat8 Top of Atmosphere Radiance
     """
     if verbose:
         logger.setLevel(logging.DEBUG)
@@ -83,7 +83,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
                 rescale_factor, readtemplate, workers, l8_bidx,
                 verbose, creation_options, pixel_sunangle):
-    """Calculates Landsat8 Surface Reflectance
+    """Calculates Landsat8 Top of Atmosphere Reflectance
     """
     if verbose:
         logger.setLevel(logging.DEBUG)

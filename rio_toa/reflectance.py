@@ -11,7 +11,7 @@ from rio_toa import sun_utils
 
 
 def reflectance(img, MR, AR, E, src_nodata=0):
-    """Calculate surface reflectance of Landsat 8
+    """Calculate top of atmosphere reflectance of Landsat 8
     as outlined here: http://landsat.usgs.gov/Landsat8_Using_Product.php
 
     R_raw = MR * Q + AR

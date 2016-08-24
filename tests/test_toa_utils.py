@@ -104,12 +104,22 @@ def test_rescale2():
     assert rescaled_arr.dtype == 'uint8'
 
 
-def test_rescale_dtype_error():
+def test_rescale_dtype():
     arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
     dtype = np.__dict__['float32']
     rescale_factor = 1.0
-    with pytest.raises(ValueError):
-        rescaled_arr = rescale(arr, rescale_factor, dtype)
+    rescaled_arr = rescale(arr, rescale_factor, dtype)
+    assert rescaled_arr.dtype == dtype
+
+
+def test_rescale_clip():
+    arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
+    dtype = np.__dict__['float32']
+    rescale_factor = 1.0
+    rescaled_arr = rescale(arr, rescale_factor, dtype, clip=True)
+    assert rescaled_arr.max() == 1.0
+    rescaled_arr = rescale(arr, rescale_factor, dtype, clip=False)
+    assert rescaled_arr.max() == 1.5
 
 
 def test_temp_rescale_K():

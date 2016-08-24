@@ -1,6 +1,8 @@
 import json
 import re
 
+import numpy as np
+
 
 def _parse_bands_from_filename(filenames, template):
     tomatch = re.compile(template.replace('{b}', '([0-9]+?)'))
@@ -124,6 +126,15 @@ def rescale(arr, rescale_factor, dtype, clip=True):
         arr[arr < 0.0] = 0.0
         arr[arr > 1.0] = 1.0
     arr *= rescale_factor
+
+    # check overflow if destination is int/uint and not clipped
+    if not clip and np.issubdtype(dtype, np.integer):
+        if arr.max() > np.iinfo(dtype).max or \
+           arr.min() < np.iinfo(dtype).min:
+            raise ValueError(
+                "Cannot safely cast to {} without losing data"
+                "; Reduce the --rescaling-factor or use --clip".format(dtype))
+
     return arr.astype(dtype)
 
 
@@ -144,8 +155,8 @@ def temp_rescale(arr, temp_scale):
 
 def normalize_scale(rescale_factor, dtype):
     default_scales = {
-        'uint8': 215,
-        'uint16': 55000,
+        'uint8': 255,
+        'uint16': 65535,
         'float32': 1.0}
 
     if not rescale_factor:

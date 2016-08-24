@@ -1,10 +1,8 @@
-import json
 import numpy as np
-import rasterio as rio
-import collections
+import rasterio
 from rasterio.coords import BoundingBox
-import riomucho
 from rasterio import warp
+import riomucho
 
 from rio_toa import toa_utils
 from rio_toa import sun_utils
@@ -62,7 +60,8 @@ def reflectance(img, MR, AR, E, src_nodata=0):
         img = np.rollaxis(img, 0, len(input_shape))
 
     rf = ((MR * img.astype(np.float32)) + AR) / np.sin(np.deg2rad(E))
-    rf[img == src_nodata] = 0.0
+    if src_nodata is not None:
+        rf[img == src_nodata] = 0.0
 
     if len(input_shape) > 2:
         if np.rollaxis(rf, len(input_shape) - 1, 0).shape != input_shape:
@@ -115,29 +114,40 @@ def _reflectance_worker(open_files, window, ij, g_args):
         # We're doing whole-scene (instead of per-pixel) sunangle:
         E = np.array([g_args['E'] for i in range(depth)])
 
-    output = toa_utils.rescale(reflectance(
-                    data,
-                    g_args['M'],
-                    g_args['A'],
-                    E,
-                    g_args['src_nodata']),
-                g_args['rescale_factor'], g_args['dst_dtype'])
+    output = toa_utils.rescale(
+        reflectance(
+            data,
+            g_args['M'],
+            g_args['A'],
+            E,
+            g_args['src_nodata']),
+        g_args['rescale_factor'],
+        g_args['dst_dtype'],
+        clip=g_args['clip'])
 
     return output
 
 
 def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
                                   creation_options, bands, dst_dtype,
-                                  processes, pixel_sunangle):
+                                  processes, pixel_sunangle, clip=True):
     """
     Parameters
     ------------
-    src_path: string
+    src_paths: list of strings
     src_mtl: string
+    dst_path: string
+    rescale_factor: float
+    creation_options: dict
+    bands: list
+    dst_dtype: string
+    processes: integer
+    pixel_sunangle: boolean
+    clip: boolean
 
     Returns
     ---------
-    out: None
+    None
         Output is written to dst_path
     """
     mtl = toa_utils._load_mtl(src_mtl)
@@ -157,7 +167,7 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
     dst_dtype = np.__dict__[dst_dtype]
 
     for src_path in src_paths:
-        with rio.open(src_path) as src:
+        with rasterio.open(src_path) as src:
             dst_profile = src.profile.copy()
             src_nodata = src.nodata
 
@@ -166,14 +176,17 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
 
             dst_profile['dtype'] = dst_dtype
 
+    rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
+
     global_args = {
         'A': A,
         'M': M,
         'E': E,
-        'src_nodata': 0,
+        'src_nodata': src_nodata,
         'src_crs': dst_profile['crs'],
         'dst_dtype': dst_dtype,
         'rescale_factor': rescale_factor,
+        'clip': clip,
         'pixel_sunangle': pixel_sunangle,
         'date_collected': date_collected,
         'time_collected_utc': time_collected_utc,

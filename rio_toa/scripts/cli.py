@@ -1,10 +1,9 @@
-
+import json
 import logging
 
 import click
-import json
-import re
 from rasterio.rio.options import creation_options
+
 from rio_toa.radiance import calculate_landsat_radiance
 from rio_toa.reflectance import calculate_landsat_reflectance
 from rio_toa.brightness_temp import calculate_landsat_brightness_temperature
@@ -28,10 +27,13 @@ def toa():
               type=click.Choice(['uint16', 'uint8']),
               default='uint16',
               help='Output data type')
-@click.option('--rescale-factor', '-r',
-              type=float,
-              default=float(55000.0/2**16),
-              help='Rescale post-TOA tifs to 55,000 or to full 16-bit')
+@click.option('--rescale-factor', '-r', type=float,
+              default=None,
+              help="Rescale TOA values by a multiplier. (Default: "
+                   "55000 for uint16, 215 for uint8, 1.0 for float32)")
+@click.option('--clip/--no-clip', default=True,
+              help="Clip raw TOA values to constrain the domain to 0..1 "
+              "(Default: True)")
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [Default ='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
@@ -43,7 +45,7 @@ def toa():
 @creation_options
 def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
              readtemplate, verbose, creation_options, l8_bidx,
-             dst_dtype, workers):
+             dst_dtype, workers, clip):
     """Calculates Landsat8 Top of Atmosphere Radiance
     """
     if verbose:
@@ -54,7 +56,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 
     calculate_landsat_radiance(src_path, src_mtl, dst_path,
                                rescale_factor, creation_options, l8_bidx,
-                               dst_dtype, workers)
+                               dst_dtype, workers, clip)
 
 
 @click.command('reflectance')
@@ -62,13 +64,16 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 @click.argument('src_mtl', type=click.Path(exists=True))
 @click.argument('dst_path', type=click.Path(exists=False))
 @click.option('--dst-dtype',
-              type=click.Choice(['uint16', 'uint8']),
+              type=click.Choice(['uint16', 'uint8', 'float32']),
               default='uint16',
               help='Output data type')
-@click.option('--rescale-factor', '-r',
-              type=float,
-              default=float(55000.0/2**16),
-              help='Rescale post-TOA tifs to 55,000 or to full 16-bit')
+@click.option('--rescale-factor', '-r', type=float,
+              default=None,
+              help="Rescale TOA values by a multiplier. (Default: "
+                   "55000 for uint16, 215 for uint8, 1.0 for float32)")
+@click.option('--clip/--no-clip', default=True,
+              help="Clip raw TOA values to constrain the domain to 0..1 "
+              "(Default: True)")
 @click.option('--readtemplate', '-t', default=".*/LC8.*\_B{b}.TIF",
               help="File path template [Default ='.*/LC8.*\_B{b}.TIF']")
 @click.option('--workers', '-j', type=int, default=4)
@@ -81,7 +86,7 @@ def radiance(ctx, src_path, src_mtl, dst_path, rescale_factor,
 @click.pass_context
 @creation_options
 def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
-                rescale_factor, readtemplate, workers, l8_bidx,
+                rescale_factor, clip, readtemplate, workers, l8_bidx,
                 verbose, creation_options, pixel_sunangle):
     """Calculates Landsat8 Top of Atmosphere Reflectance
     """
@@ -94,7 +99,7 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
     calculate_landsat_reflectance(list(src_paths), src_mtl, dst_path,
                                   rescale_factor, creation_options,
                                   list(l8_bidx), dst_dtype,
-                                  workers, pixel_sunangle)
+                                  workers, pixel_sunangle, clip)
 
 
 @click.command('brighttemp')
@@ -105,7 +110,7 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
               default='float32',
               help='Output data type')
-@click.option('--temp_scale', '-s',
+@click.option('--temp-scale', '-s',
               type=click.Choice(['K', 'F', 'C']),
               default='K',
               help='Temperature scale [Default = K (Kelvin)]')

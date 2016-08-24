@@ -1,6 +1,5 @@
-import json
 import numpy as np
-import rasterio as rio
+import rasterio
 import riomucho
 
 from rio_toa import toa_utils
@@ -37,7 +36,8 @@ def radiance(img, ML, AL, src_nodata=0):
     """
 
     rs = ML * img.astype(np.float32) + AL
-    rs[img == src_nodata] = 0.0
+    if src_nodata is not None:
+        rs[img == src_nodata] = 0.0
 
     return rs
 
@@ -49,26 +49,38 @@ def _radiance_worker(data, window, ij, g_args):
     different output datatypes
     """
     output = toa_utils.rescale(
-                radiance(
-                    data[0],
-                    g_args['M'],
-                    g_args['A'],
-                    g_args['src_nodata']),
-                g_args['rescale_factor'],
-                g_args['dst_dtype'])
+        radiance(
+            data[0],
+            g_args['M'],
+            g_args['A'],
+            g_args['src_nodata']),
+        g_args['rescale_factor'],
+        g_args['dst_dtype'],
+        clip=g_args['clip'])
 
     return output
 
 
 def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
-                               creation_options, band, dst_dtype, processes):
+                               creation_options, band, dst_dtype, processes,
+                               clip=True):
     """
     Parameters
     ------------
+    src_path: strings
+    src_mtl: string
+    dst_path: string
+    rescale_factor: float
+    creation_options: dict
+    bands: list
+    dst_dtype: string
+    processes: integer
+    pixel_sunangle: boolean
+    clip: boolean
 
     Returns
     ---------
-    out: None
+    None
         Output is written to dst_path
     """
     mtl = toa_utils._load_mtl(src_mtl)
@@ -86,7 +98,7 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
 
     dst_dtype = np.__dict__[dst_dtype]
 
-    with rio.open(src_path) as src:
+    with rasterio.open(src_path) as src:
         dst_profile = src.profile.copy()
 
         src_nodata = src.nodata
@@ -96,11 +108,14 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
 
         dst_profile['dtype'] = dst_dtype
 
+    rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
+    
     global_args = {
         'A': A,
         'M': M,
-        'src_nodata': 0,
+        'src_nodata': src_nodata,
         'rescale_factor': rescale_factor,
+        'clip': clip,
         'dst_dtype': dst_dtype
         }
 

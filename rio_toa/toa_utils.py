@@ -1,6 +1,5 @@
 import json
 import re
-import numpy as np
 
 
 def _parse_bands_from_filename(filenames, template):
@@ -91,10 +90,10 @@ def _cast_to_best_type(kd):
     key, data = kd[0]
     try:
         return key, int(data)
-    except ValueError as err:
+    except ValueError:
         try:
             return key, float(data)
-        except ValueError as err:
+        except ValueError:
             return key, u'{}'.format(data.strip('"'))
 
 
@@ -117,15 +116,15 @@ def _get_bounds_from_metadata(product_metadata):
     return [min(lngs), min(lats), max(lngs), max(lats)]
 
 
-def rescale(arr, rescale_factor, dtype):
+def rescale(arr, rescale_factor, dtype, clip=True):
     """Convert an array from 0..1 to dtype, scaling up linearly
     """
-
-    if dtype not in [np.uint8, np.uint16]:
-        raise ValueError('Rescaling converts to uint{8,16} only')
-
-    arr *= rescale_factor * np.iinfo(dtype).max
-    return np.clip(arr, 1, np.iinfo(dtype).max).astype(dtype)
+    arr = arr.copy()  # avoid mutating the original data
+    if clip:
+        arr[arr < 0.0] = 0.0
+        arr[arr > 1.0] = 1.0
+    arr *= rescale_factor
+    return arr.astype(dtype)
 
 
 def temp_rescale(arr, temp_scale):
@@ -141,3 +140,18 @@ def temp_rescale(arr, temp_scale):
     else:
         raise ValueError('%s is not a valid temperature scale'
                          % (temp_scale))
+
+
+def normalize_scale(rescale_factor, dtype):
+    default_scales = {
+        'uint8': 215,
+        'uint16': 55000,
+        'float32': 1.0}
+
+    if not rescale_factor:
+        try:
+            rescale_factor = default_scales[dtype]
+        except KeyError:
+            rescale_factor = 1.0
+
+    return rescale_factor

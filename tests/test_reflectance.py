@@ -1,14 +1,35 @@
-import os
 import json
-import numpy as np
+import os
+
+from affine import Affine
 import click
-import rasterio as rio
-import riomucho
+import numpy as np
 import pytest
+import rasterio as rio
 from rasterio.coords import BoundingBox
-from raster_tester.compare import affaux, upsample_array
+from rasterio.warp import reproject, Resampling
+
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
+
+
+def affaux(up):
+    return Affine(1, 0, 0, 0, -1, 0), Affine(up, 0, 0, 0, -up, 0)
+
+
+def upsample_array(bidx, up, fr, to):
+    upBidx = np.empty(
+        (bidx.shape[0] * up, bidx.shape[1] * up), dtype=bidx.dtype)
+
+    reproject(
+        bidx, upBidx,
+        src_transform=fr,
+        dst_transform=to,
+        src_crs="EPSG:3857",
+        dst_crs="EPSG:3857",
+        resampling=Resampling.bilinear)
+
+    return upBidx
 
 
 def flex_compare(r1, r2, thresh=10):
@@ -141,10 +162,11 @@ def test_calculate_reflectance(test_data):
     assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
     assert isinstance(M, float)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    toa_rescaled = toa_utils.rescale(toa, 55000.0, np.uint16, clip=False)
     assert toa_rescaled.dtype == np.uint16
-    assert np.min(tif_output_single) == np.min(toa_rescaled)
-    assert int(np.max(tif_output_single)) == int(np.max(toa_rescaled))
+    # Note, the test data was created under a rescaling code, hence the fuzziness
+    diff = toa_rescaled[310:315, 310:315] - tif_output_single[310:315, 310:315]
+    assert diff.max() <= 1
 
 def test_calculate_reflectance_uint8(test_data):
     tif_b, tif_output_single, mtl = test_data[0], test_data[5], test_data[-1]
@@ -167,11 +189,11 @@ def test_calculate_reflectance_uint8(test_data):
     assert (np.sin(np.radians(E)) <= 1) & (-1 <= np.sin(np.radians(E)))
     assert isinstance(M, float)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint8)
+    toa_rescaled = toa_utils.rescale(toa, 215, np.uint8)
     scale = float(np.iinfo(np.uint16).max) / float(np.iinfo(np.uint8).max)
     tif_out_rescaled = np.clip(
         (tif_output_single / scale),
-        1, np.iinfo(np.uint8).max).astype(np.uint8)
+        0, np.iinfo(np.uint8).max).astype(np.uint8)
     assert toa_rescaled.dtype == np.uint8
     assert np.min(tif_out_rescaled) == np.min(toa_rescaled)
 
@@ -204,7 +226,7 @@ def test_calculate_reflectance2(test_data):
                                 date_collected,
                                 time_collected_utc)
     toa = reflectance.reflectance(tif_b, M, A, E)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint16)
+    toa_rescaled = toa_utils.rescale(toa, 55000.0, np.uint16)
     assert toa_rescaled.dtype == np.uint16
     assert np.all(toa_rescaled) < 1.5
     assert np.all(toa_rescaled) >= 0.0
@@ -254,9 +276,9 @@ def test_calculate_landsat_reflectance_stack_pixel(test_var, test_data, capfd):
         test_var[:3], test_var[3], test_data[-3]
     dst_path = '/tmp/ref2.tif'
     expected_path = 'tests/expected/ref2.tif'
-    rescale_factor = float(55000.0/2**16)
     creation_options = {}
     dst_dtype = 'uint8'
+    rescale_factor = 215
     processes = 1
     pixel_sunangle = True
 

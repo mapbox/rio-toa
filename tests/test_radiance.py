@@ -92,11 +92,11 @@ def test_calculate_radiance(test_data):
 
     assert isinstance(M, float)
     toa = radiance.radiance(tif, M, A)
-    toa_rescaled = toa_utils.rescale(toa, float(55000.0/2**16), np.uint8)
+    toa_rescaled = toa_utils.rescale(toa, 255, np.uint8)
     scale = float(np.iinfo(np.uint16).max) / float(np.iinfo(np.uint8).max)
     tif_out_rescaled = np.clip(
         (tif_output / scale),
-        1, np.iinfo(np.uint8).max).astype(np.uint8)
+        0, np.iinfo(np.uint8).max).astype(np.uint8)
     assert toa_rescaled.dtype == np.uint8
     assert np.min(tif_out_rescaled) == np.min(toa_rescaled)
     assert int(np.max(tif_out_rescaled)) == int(np.max(toa_rescaled))
@@ -117,7 +117,7 @@ def test_calculate_radiance2(test_data):
 
     toa = toa_utils.rescale(
             radiance.radiance(tif, M, A),
-            float(55000.0/2**16), np.uint16)
+            55000, np.uint16)
     assert toa.dtype == np.uint16
     assert np.all(toa) < 1.5
     assert np.all(toa) >= 0.0

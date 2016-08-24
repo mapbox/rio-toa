@@ -164,6 +164,8 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
     date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
     time_collected_utc = metadata['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
+    rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
+
     dst_dtype = np.__dict__[dst_dtype]
 
     for src_path in src_paths:
@@ -175,8 +177,6 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
                 dst_profile[co] = creation_options[co]
 
             dst_profile['dtype'] = dst_dtype
-
-    rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
 
     global_args = {
         'A': A,

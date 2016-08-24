@@ -96,6 +96,8 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
                                  'RADIANCE_ADD_BAND_'],
                                 band)
 
+    rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
+
     dst_dtype = np.__dict__[dst_dtype]
 
     with rasterio.open(src_path) as src:
@@ -108,8 +110,6 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
 
         dst_profile['dtype'] = dst_dtype
 
-    rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
-    
     global_args = {
         'A': A,
         'M': M,

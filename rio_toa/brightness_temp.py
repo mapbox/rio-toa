@@ -88,7 +88,7 @@ def _brightness_temp_worker(data, window, ij, g_args):
                         g_args['src_nodata']),
                     g_args['temp_scale'])
 
-    return output
+    return output.astype(g_args['dst_dtype'])
 
 
 def calculate_landsat_brightness_temperature(

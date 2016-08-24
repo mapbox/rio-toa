@@ -105,7 +105,7 @@ def reflectance(ctx, src_paths, src_mtl, dst_path, dst_dtype,
               type=click.Choice(['float32', 'float64', 'uint16', 'uint8']),
               default='float32',
               help='Output data type')
-@click.option('--temp_scale', '-s',
+@click.option('--temp-scale', '-s',
               type=click.Choice(['K', 'F', 'C']),
               default='K',
               help='Temperature scale [Default = K (Kelvin)]')

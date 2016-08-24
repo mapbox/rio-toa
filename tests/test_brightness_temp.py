@@ -1,19 +1,37 @@
-import os
 import json
-import numpy as np
-import rasterio as rio
+import os
+
+from affine import Affine
 import click
-import riomucho
-import pytest
 from hypothesis import given
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays
-from rasterio.coords import BoundingBox
+import numpy as np
+import pytest
+import rasterio as rio
+from rasterio.warp import reproject, Resampling
 
 from rio_toa import brightness_temp
-from rio_toa import radiance
 from rio_toa import toa_utils
-from raster_tester.compare import affaux, upsample_array
+
+
+def affaux(up):
+    return Affine(1, 0, 0, 0, -1, 0), Affine(up, 0, 0, 0, -up, 0)
+
+
+def upsample_array(bidx, up, fr, to):
+    upBidx = np.empty(
+        (bidx.shape[0] * up, bidx.shape[1] * up), dtype=bidx.dtype)
+
+    reproject(
+        bidx, upBidx,
+        src_transform=fr,
+        dst_transform=to,
+        src_crs="EPSG:3857",
+        dst_crs="EPSG:3857",
+        resampling=Resampling.bilinear)
+
+    return upBidx
 
 
 def flex_compare(r1, r2, thresh=10):
@@ -163,3 +181,22 @@ def test_calculate_landsat_brightness_temperature(test_var, test_data, capfd):
     with rio.open(dst_path) as created:
         with rio.open(expected_path) as expected:
             assert flex_compare(created.read(), expected.read())
+
+
+def test_calculate_brightness_dst_dtype(test_var, capfd):
+    src_path, src_mtl = test_var[0], test_var[1]
+    dst_path = '/tmp/test_uint16.tif'
+    temp_scale = 'K'
+    creation_options = {}
+    thermal_bidx = 11
+    dst_dtype = 'uint16'
+    processes = 1
+
+    brightness_temp.calculate_landsat_brightness_temperature(
+        src_path, src_mtl, dst_path, temp_scale, creation_options,
+        thermal_bidx, dst_dtype, processes)
+
+    assert os.path.exists(dst_path)
+
+    with rio.open(dst_path) as created:
+        assert created.meta['dtype'] == 'uint16'

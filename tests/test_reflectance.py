@@ -1,14 +1,35 @@
-import os
 import json
-import numpy as np
+import os
+
+from affine import Affine
 import click
-import rasterio as rio
-import riomucho
+import numpy as np
 import pytest
+import rasterio as rio
 from rasterio.coords import BoundingBox
-from raster_tester.compare import affaux, upsample_array
+from rasterio.warp import reproject, Resampling
+
 from rio_toa import toa_utils, sun_utils
 from rio_toa import reflectance
+
+
+def affaux(up):
+    return Affine(1, 0, 0, 0, -1, 0), Affine(up, 0, 0, 0, -up, 0)
+
+
+def upsample_array(bidx, up, fr, to):
+    upBidx = np.empty(
+        (bidx.shape[0] * up, bidx.shape[1] * up), dtype=bidx.dtype)
+
+    reproject(
+        bidx, upBidx,
+        src_transform=fr,
+        dst_transform=to,
+        src_crs="EPSG:3857",
+        dst_crs="EPSG:3857",
+        resampling=Resampling.bilinear)
+
+    return upBidx
 
 
 def flex_compare(r1, r2, thresh=10):

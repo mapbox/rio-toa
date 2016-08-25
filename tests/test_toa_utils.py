@@ -122,6 +122,19 @@ def test_rescale_clip():
     assert rescaled_arr.max() == 1.5
 
 
+def test_rescale_overflow():
+    arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
+    dtype = np.__dict__['uint16']
+    rescale_factor = 65535
+    rescaled_arr = rescale(arr, rescale_factor, dtype, clip=True)
+    assert rescaled_arr.max() == 65535
+    rescaled_arr = rescale(arr, rescale_factor, np.__dict__['float32'], clip=False)
+    assert rescaled_arr.max() == 65535 * 1.5
+    with pytest.raises(ValueError):
+        # without clipping, this will overflow
+        rescaled_arr = rescale(arr, rescale_factor, dtype, clip=False)
+
+
 def test_temp_rescale_K():
     arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
     np.testing.assert_array_equal(arr, temp_rescale(arr, 'K'))

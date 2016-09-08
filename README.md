@@ -27,7 +27,7 @@ pip install rio-toa
 ```
 Or install from source
 ```
-git checkout https://github.com/mapbox/rio-toa.git
+git clone https://github.com/mapbox/rio-toa.git
 cd rio-toa
 pip install -U pip
 pip install -r requirements-dev.txt

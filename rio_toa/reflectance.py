@@ -151,18 +151,43 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
         Output is written to dst_path
     """
     mtl = toa_utils._load_mtl(src_mtl)
-    metadata = mtl['L1_METADATA_FILE']
 
-    M = [metadata['RADIOMETRIC_RESCALING']
-         ['REFLECTANCE_MULT_BAND_{}'.format(b)]
-         for b in bands]
-    A = [metadata['RADIOMETRIC_RESCALING']
-         ['REFLECTANCE_ADD_BAND_{}'.format(b)]
-         for b in bands]
+    # Two types of MTL file are available
+    l1_metadata_key = 'L1_METADATA_FILE'
+    landsat_metadata_key = 'LANDSAT_METADATA_FILE'
+    if l1_metadata_key in mtl:
+        metadata = mtl[l1_metadata_key]
+
+        M = [metadata['RADIOMETRIC_RESCALING']
+             ['REFLECTANCE_MULT_BAND_{}'.format(b)]
+             for b in bands]
+        A = [metadata['RADIOMETRIC_RESCALING']
+             ['REFLECTANCE_ADD_BAND_{}'.format(b)]
+             for b in bands]
+
+        date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
+        time_collected_utc = metadata['PRODUCT_METADATA']['SCENE_CENTER_TIME']
+
+    elif landsat_metadata_key in mtl:
+        metadata = mtl[landsat_metadata_key]
+
+        M = [metadata['LEVEL1_RADIOMETRIC_RESCALING']
+             ['REFLECTANCE_MULT_BAND_{}'.format(b)]
+             for b in bands]
+        A = [metadata['LEVEL1_RADIOMETRIC_RESCALING']
+             ['REFLECTANCE_ADD_BAND_{}'.format(b)]
+             for b in bands]
+
+        date_collected = metadata['IMAGE_ATTRIBUTES']['DATE_ACQUIRED']
+        time_collected_utc = metadata['IMAGE_ATTRIBUTES']['SCENE_CENTER_TIME']
+
+    else:
+        msg = 'Metadata MTL file should contain {} or {} as a top group name but those are not detected!'.format(
+            l1_metadata_key, landsat_metadata_key
+        )
+        raise KeyError(msg)
 
     E = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
-    date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
-    time_collected_utc = metadata['PRODUCT_METADATA']['SCENE_CENTER_TIME']
 
     rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
 

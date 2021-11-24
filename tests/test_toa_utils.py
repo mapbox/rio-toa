@@ -56,7 +56,6 @@ def test_load_txt_mtl_2():
         assert k in txtmtl['L1_METADATA_FILE']
         assert jsonmtl['L1_METADATA_FILE'][k] == txtmtl['L1_METADATA_FILE'][k]
 
-
 def test_load_mtl_key():
     mtl_test = {u'L1_METADATA_FILE':
                 {u'IMAGE_ATTRIBUTES':
@@ -155,3 +154,69 @@ def test_temp_rescale_error():
     arr = np.array(np.linspace(0.0, 1.5, num=9).reshape(3, 3))
     with pytest.raises(ValueError):
         temp_rescale(arr, 'FC')
+
+
+# TEST NEW METADATA SCHEMA
+
+def test_reflectance_keys_mtl():
+    src_mtl = 'tests/data/mtltest_v2_LC08_L1TP_188018_20200927_20201005_02_T1_MTL.txt'
+    landsat_key = 'LANDSAT_METADATA_FILE'
+    radiometric_key = 'LEVEL1_RADIOMETRIC_RESCALING'
+    m_key_lvl_2 = 'REFLECTANCE_MULT_BAND_1'
+    a_key_lvl_2 = 'REFLECTANCE_ADD_BAND_1'
+    img_att_key = 'IMAGE_ATTRIBUTES'
+    date_ac_key = 'DATE_ACQUIRED'
+    scene_time_key = 'SCENE_CENTER_TIME'
+    sun_elevation_key = 'SUN_ELEVATION'
+
+    mtl = _load_mtl(src_mtl)
+
+    assert landsat_key in mtl
+
+    assert radiometric_key in mtl[landsat_key]
+    assert m_key_lvl_2 in mtl[landsat_key][radiometric_key]
+    assert a_key_lvl_2 in mtl[landsat_key][radiometric_key]
+
+    assert img_att_key in mtl[landsat_key]
+    assert date_ac_key in mtl[landsat_key][img_att_key]
+    assert scene_time_key in mtl[landsat_key][img_att_key]
+    assert sun_elevation_key in mtl[landsat_key][img_att_key]
+
+
+def test_radiance_keys_mtl():
+    src_mtl = 'tests/data/mtltest_v2_LC08_L1TP_188018_20200927_20201005_02_T1_MTL.txt'
+    landsat_key = 'LANDSAT_METADATA_FILE'
+    radiometric_key = 'LEVEL1_RADIOMETRIC_RESCALING'
+    m_key_lvl_2 = 'RADIANCE_MULT_BAND_1'
+    a_key_lvl_2 = 'RADIANCE_ADD_BAND_1'
+
+    mtl = _load_mtl(src_mtl)
+
+    assert landsat_key in mtl
+
+    assert radiometric_key in mtl[landsat_key]
+    assert m_key_lvl_2 in mtl[landsat_key][radiometric_key]
+    assert a_key_lvl_2 in mtl[landsat_key][radiometric_key]
+
+
+def test_b_temperature_keys():
+    src_mtl = 'tests/data/mtltest_v2_LC08_L1TP_188018_20200927_20201005_02_T1_MTL.txt'
+    landsat_key = 'LANDSAT_METADATA_FILE'
+    radiometric_key = 'LEVEL1_RADIOMETRIC_RESCALING'
+    thermal_key = 'LEVEL1_THERMAL_CONSTANTS'
+    m_key_lvl_2 = 'RADIANCE_MULT_BAND_1'
+    a_key_lvl_2 = 'RADIANCE_ADD_BAND_1'
+    k1_key = 'K1_CONSTANT_BAND_10'
+    k2_key = 'K2_CONSTANT_BAND_10'
+
+    mtl = _load_mtl(src_mtl)
+
+    assert landsat_key in mtl
+
+    assert radiometric_key in mtl[landsat_key]
+    assert m_key_lvl_2 in mtl[landsat_key][radiometric_key]
+    assert a_key_lvl_2 in mtl[landsat_key][radiometric_key]
+
+    assert thermal_key in mtl[landsat_key]
+    assert k1_key in mtl[landsat_key][thermal_key]
+    assert k2_key in mtl[landsat_key][thermal_key]

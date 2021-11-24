@@ -119,27 +119,57 @@ def calculate_landsat_brightness_temperature(
     """
     mtl = toa_utils._load_mtl(src_mtl)
 
-    M = toa_utils._load_mtl_key(mtl,
-                                ['L1_METADATA_FILE',
-                                 'RADIOMETRIC_RESCALING',
-                                 'RADIANCE_MULT_BAND_'],
-                                band)
-    A = toa_utils._load_mtl_key(mtl,
-                                ['L1_METADATA_FILE',
-                                 'RADIOMETRIC_RESCALING',
-                                 'RADIANCE_ADD_BAND_'],
-                                band)
+    l1_metadata_key = 'L1_METADATA_FILE'
+    landsat_metadata_key = 'LANDSAT_METADATA_FILE'
 
-    K1 = toa_utils._load_mtl_key(mtl,
-                                 ['L1_METADATA_FILE',
-                                  'TIRS_THERMAL_CONSTANTS',
-                                  'K1_CONSTANT_BAND_'],
-                                 band)
-    K2 = toa_utils._load_mtl_key(mtl,
-                                 ['L1_METADATA_FILE',
-                                  'TIRS_THERMAL_CONSTANTS',
-                                  'K2_CONSTANT_BAND_'],
-                                 band)
+    if l1_metadata_key in mtl:
+        M = toa_utils._load_mtl_key(mtl,
+                                    [l1_metadata_key,
+                                     'RADIOMETRIC_RESCALING',
+                                     'RADIANCE_MULT_BAND_'],
+                                    band)
+        A = toa_utils._load_mtl_key(mtl,
+                                    [l1_metadata_key,
+                                     'RADIOMETRIC_RESCALING',
+                                     'RADIANCE_ADD_BAND_'],
+                                    band)
+
+        K1 = toa_utils._load_mtl_key(mtl,
+                                     [l1_metadata_key,
+                                      'TIRS_THERMAL_CONSTANTS',
+                                      'K1_CONSTANT_BAND_'],
+                                     band)
+        K2 = toa_utils._load_mtl_key(mtl,
+                                     [l1_metadata_key,
+                                      'TIRS_THERMAL_CONSTANTS',
+                                      'K2_CONSTANT_BAND_'],
+                                     band)
+
+    elif landsat_metadata_key in mtl:
+
+        M = toa_utils._load_mtl_key(mtl,
+                                    [landsat_metadata_key, 'LEVEL1_RADIOMETRIC_RESCALING', 'RADIANCE_MULT_BAND_'],
+                                    band)
+
+        A = toa_utils._load_mtl_key(mtl,
+                                    [landsat_metadata_key, 'LEVEL1_RADIOMETRIC_RESCALING', 'RADIANCE_ADD_BAND_'],
+                                    band)
+
+        K1 = toa_utils._load_mtl_key(mtl,
+                                     [landsat_metadata_key,
+                                      'LEVEL1_THERMAL_CONSTANTS',
+                                      'K1_CONSTANT_BAND_'],
+                                     band)
+        K2 = toa_utils._load_mtl_key(mtl,
+                                     [landsat_metadata_key,
+                                      'LEVEL1_THERMAL_CONSTANTS',
+                                      'K2_CONSTANT_BAND_'],
+                                     band)
+    else:
+        msg = 'Metadata MTL file should contain {} or {} as a top group name but those are not detected!'.format(
+            l1_metadata_key, landsat_metadata_key
+        )
+        raise KeyError(msg)
 
     dst_dtype = np.__dict__[dst_dtype]
 

@@ -166,3 +166,142 @@ def normalize_scale(rescale_factor, dtype):
             rescale_factor = 1.0
 
     return rescale_factor
+
+
+# Parse MTL data keys and values for calculations
+
+def _get_all_keys(nested_dict: dict, search_key: str):
+    """
+    Function iterates through a given dictionary and compares all keys within it to the search_key string,
+        if search_key is within a key then function returns this key and its value. It could return multiple pairs.
+
+    Parameters
+    ----------
+    nested_dict: dict
+        parsed mtl file dict
+    search_key: specific key to find within a dict
+
+    Returns: dict
+    -------
+
+    """
+
+    for key, value in nested_dict.items():
+        if type(value) is dict:
+            yield from _get_all_keys(value, search_key)
+        else:
+            if search_key in key:
+                yield (key, value)
+
+
+def get_date_acquired(mtl_dict: dict) -> list:
+    date_acquired_str = 'DATE_ACQUIRED'
+    date_acquired = [[key, value] for key, value in _get_all_keys(mtl_dict, date_acquired_str)]
+    return date_acquired[0]
+
+
+def get_k1_thermal_c(mtl_dict: dict) -> list:
+    k1_const_str = 'K1_CONSTANT_BAND_'
+    k1_consts = [[key, value] for key, value in _get_all_keys(mtl_dict, k1_const_str)]
+    return k1_consts
+
+
+def get_k2_thermal_c(mtl_dict: dict) -> list:
+    k2_const_str = 'K2_CONSTANT_BAND_'
+    k2_consts = [[key, value] for key, value in _get_all_keys(mtl_dict, k2_const_str)]
+    return k2_consts
+
+
+def get_radiance_add_factors(mtl_dict: dict) -> list:
+    radiance_add_str = 'RADIANCE_ADD_BAND_'
+    radiance_add_factors = [[key, value] for key, value in _get_all_keys(mtl_dict, radiance_add_str)]
+    return radiance_add_factors
+
+
+def get_radiance_mult_factors(mtl_dict: dict) -> list:
+    radiance_mult_str = 'RADIANCE_MULT_BAND_'
+    radiance_mult_factors = [[key, value] for key, value in _get_all_keys(mtl_dict, radiance_mult_str)]
+    return radiance_mult_factors
+
+
+def get_reflectance_add_factors(mtl_dict: dict) -> list:
+    reflectance_add_str = 'REFLECTANCE_ADD_BAND_'
+    reflectance_add_factors = [[key, value] for key, value in _get_all_keys(mtl_dict, reflectance_add_str)]
+    return reflectance_add_factors
+
+
+def get_reflectance_mult_factors(mtl_dict: dict) -> list:
+    reflectance_mult_str = 'REFLECTANCE_MULT_BAND_'
+    reflectance_mult_factors = [[key, value] for key, value in _get_all_keys(mtl_dict, reflectance_mult_str)]
+    return reflectance_mult_factors
+
+
+def get_scene_center_time(mtl_dict: dict) -> list:
+    scene_time_str = 'SCENE_CENTER_TIME'
+    scene_time = [[key, value] for key, value in _get_all_keys(mtl_dict, scene_time_str)]
+    return scene_time[0]
+
+
+def get_sun_elevation(mtl_dict: dict) -> list:
+    sun_elevation_str = 'SUN_ELEVATION'
+    sun_elevation = [[key, value] for key, value in _get_all_keys(mtl_dict, sun_elevation_str)]
+    return sun_elevation[0]
+
+
+def get_metadata_parameters(
+        mtl_dict: dict,
+        date_acquired=True,
+        k1_thermal_constants=True,
+        k2_thermal_constants=True,
+        radiance_add_factors=True,
+        radiance_mult_factors=True,
+        reflectance_add_factors=True,
+        reflectance_mult_factors=True,
+        scene_center_time=True,
+        sun_elevation=True) -> dict:
+
+    d = {}
+
+    if date_acquired:
+        k, v = get_date_acquired(mtl_dict)
+        d[k] = v
+
+    if k1_thermal_constants:
+        consts = get_k1_thermal_c(mtl_dict)
+        for c in consts:
+            d[c[0]] = c[1]
+
+    if k2_thermal_constants:
+        consts = get_k2_thermal_c(mtl_dict)
+        for c in consts:
+            d[c[0]] = c[1]
+
+    if radiance_add_factors:
+        factors = get_radiance_add_factors(mtl_dict)
+        for f in factors:
+            d[f[0]] = f[1]
+
+    if radiance_mult_factors:
+        factors = get_radiance_mult_factors(mtl_dict)
+        for f in factors:
+            d[f[0]] = f[1]
+
+    if reflectance_add_factors:
+        factors = get_reflectance_add_factors(mtl_dict)
+        for f in factors:
+            d[f[0]] = f[1]
+
+    if reflectance_mult_factors:
+        factors = get_reflectance_mult_factors(mtl_dict)
+        for f in factors:
+            d[f[0]] = f[1]
+
+    if scene_center_time:
+        k, v = get_scene_center_time(mtl_dict)
+        d[k] = v
+
+    if sun_elevation:
+        k, v = get_sun_elevation(mtl_dict)
+        d[k] = v
+
+    return d

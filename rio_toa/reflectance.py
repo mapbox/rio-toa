@@ -5,6 +5,7 @@ from rasterio import warp
 import riomucho
 
 from rio_toa import toa_utils
+from rio_toa.toa_utils import get_metadata_parameters
 from rio_toa import sun_utils
 
 
@@ -151,18 +152,14 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
         Output is written to dst_path
     """
     mtl = toa_utils._load_mtl(src_mtl)
-    metadata = mtl['L1_METADATA_FILE']
+    meta_params = get_metadata_parameters(mtl)
 
-    M = [metadata['RADIOMETRIC_RESCALING']
-         ['REFLECTANCE_MULT_BAND_{}'.format(b)]
-         for b in bands]
-    A = [metadata['RADIOMETRIC_RESCALING']
-         ['REFLECTANCE_ADD_BAND_{}'.format(b)]
-         for b in bands]
-
-    E = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
-    date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
-    time_collected_utc = metadata['PRODUCT_METADATA']['SCENE_CENTER_TIME']
+    # Two types of MTL file are available
+    M = [meta_params['REFLECTANCE_MULT_BAND_{}'.format(b)] for b in bands]
+    A = [meta_params['REFLECTANCE_ADD_BAND_{}'.format(b)] for b in bands]
+    date_collected = meta_params['DATE_ACQUIRED']
+    time_collected_utc = meta_params['SCENE_CENTER_TIME']
+    E = meta_params['SUN_ELEVATION']
 
     rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
 

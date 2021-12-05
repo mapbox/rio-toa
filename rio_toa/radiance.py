@@ -3,6 +3,7 @@ import rasterio
 import riomucho
 
 from rio_toa import toa_utils
+from rio_toa.toa_utils import get_metadata_parameters
 
 
 def radiance(img, ML, AL, src_nodata=0):
@@ -85,16 +86,10 @@ def calculate_landsat_radiance(src_path, src_mtl, dst_path, rescale_factor,
     """
     mtl = toa_utils._load_mtl(src_mtl)
 
-    M = toa_utils._load_mtl_key(mtl,
-                                ['L1_METADATA_FILE',
-                                 'RADIOMETRIC_RESCALING',
-                                 'RADIANCE_MULT_BAND_'],
-                                band)
-    A = toa_utils._load_mtl_key(mtl,
-                                ['L1_METADATA_FILE',
-                                 'RADIOMETRIC_RESCALING',
-                                 'RADIANCE_ADD_BAND_'],
-                                band)
+    meta_params = get_metadata_parameters(mtl)
+
+    M = meta_params['RADIANCE_MULT_BAND_{}'.format(band)]
+    A = meta_params['RADIANCE_ADD_BAND_{}'.format(band)]
 
     rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
 

@@ -63,3 +63,7 @@ target/
 
 docs/notebooks/.ipynb_checkpoints/*
 .hypothesis
+
+# PyCharm
+
+*.idea*

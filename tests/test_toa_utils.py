@@ -4,7 +4,7 @@ import numpy as np
 from rio_toa.toa_utils import (
     _parse_bands_from_filename,
     _load_mtl_key, _load_mtl, rescale,
-    temp_rescale)
+    temp_rescale, get_metadata_parameters)
 
 
 
@@ -220,3 +220,17 @@ def test_b_temperature_keys():
     assert thermal_key in mtl[landsat_key]
     assert k1_key in mtl[landsat_key][thermal_key]
     assert k2_key in mtl[landsat_key][thermal_key]
+
+
+def test_get_metadata_parameters():
+    src_mtl_1 = 'tests/data/LC81060712016134LGN00_MTL.txt'
+    src_mtl_2 = 'tests/data/mtltest_v2_LC08_L1TP_188018_20200927_20201005_02_T1_MTL.txt'
+    src_mtl_3 = 'tests/data/mtltest_v3_LC08_L1TP_009057_20141023_20200910_02_T1_MTL.txt'
+    src_dict_1 = _load_mtl(src_mtl_1)
+    src_dict_2 = _load_mtl(src_mtl_2)
+    src_dict_3 = _load_mtl(src_mtl_3)
+    pdict_1 = get_metadata_parameters(src_dict_1)
+    pdict_2 = get_metadata_parameters(src_dict_2)
+    pdict_3 = get_metadata_parameters(src_dict_3)
+
+    assert len(pdict_1) == len(pdict_3) == len(pdict_2)

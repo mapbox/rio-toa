@@ -5,6 +5,7 @@ from rasterio import warp
 import riomucho
 
 from rio_toa import toa_utils
+from rio_toa.toa_utils import get_metadata_parameters
 from rio_toa import sun_utils
 
 
@@ -151,43 +152,14 @@ def calculate_landsat_reflectance(src_paths, src_mtl, dst_path, rescale_factor,
         Output is written to dst_path
     """
     mtl = toa_utils._load_mtl(src_mtl)
+    meta_params = get_metadata_parameters(mtl)
 
     # Two types of MTL file are available
-    l1_metadata_key = 'L1_METADATA_FILE'
-    landsat_metadata_key = 'LANDSAT_METADATA_FILE'
-    if l1_metadata_key in mtl:
-        metadata = mtl[l1_metadata_key]
-
-        M = [metadata['RADIOMETRIC_RESCALING']
-             ['REFLECTANCE_MULT_BAND_{}'.format(b)]
-             for b in bands]
-        A = [metadata['RADIOMETRIC_RESCALING']
-             ['REFLECTANCE_ADD_BAND_{}'.format(b)]
-             for b in bands]
-
-        date_collected = metadata['PRODUCT_METADATA']['DATE_ACQUIRED']
-        time_collected_utc = metadata['PRODUCT_METADATA']['SCENE_CENTER_TIME']
-
-    elif landsat_metadata_key in mtl:
-        metadata = mtl[landsat_metadata_key]
-
-        M = [metadata['LEVEL1_RADIOMETRIC_RESCALING']
-             ['REFLECTANCE_MULT_BAND_{}'.format(b)]
-             for b in bands]
-        A = [metadata['LEVEL1_RADIOMETRIC_RESCALING']
-             ['REFLECTANCE_ADD_BAND_{}'.format(b)]
-             for b in bands]
-
-        date_collected = metadata['IMAGE_ATTRIBUTES']['DATE_ACQUIRED']
-        time_collected_utc = metadata['IMAGE_ATTRIBUTES']['SCENE_CENTER_TIME']
-
-    else:
-        msg = 'Metadata MTL file should contain {} or {} as a top group name but those are not detected!'.format(
-            l1_metadata_key, landsat_metadata_key
-        )
-        raise KeyError(msg)
-
-    E = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+    M = [meta_params['REFLECTANCE_MULT_BAND_{}'.format(b)] for b in bands]
+    A = [meta_params['REFLECTANCE_ADD_BAND_{}'.format(b)] for b in bands]
+    date_collected = meta_params['DATE_ACQUIRED']
+    time_collected_utc = meta_params['SCENE_CENTER_TIME']
+    E = meta_params['SUN_ELEVATION']
 
     rescale_factor = toa_utils.normalize_scale(rescale_factor, dst_dtype)
 
